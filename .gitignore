@@ -1,0 +1,25 @@
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Dependencies, build output, local QA and artifact generation
+node_modules/
+dist/
+coverage/
+qa-artifacts/
+test-results/
+playwright-report/
+tmp/
+output/
+
+# Local OS metadata and original image with EXIF/XMP
+.DS_Store
+assets/avatar.png
+
+# This unrelated existing workflow is preserved locally, not published/run here.
+.github/workflows/telegram-daily-message.yml
