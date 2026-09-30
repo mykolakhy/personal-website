@@ -18,7 +18,7 @@ test('local links, anchors, IDs and referenced resources are valid', async () =>
   urls.push(...[...css.matchAll(/url\("([^"]+)"\)/g)].map((match) => match[1]));
   for (const url of urls) {
     if (url.startsWith('#')) assert.ok(ids.includes(url.slice(1)), url);
-    if (url.startsWith('./')) assert.ok(publicFiles.includes(url.slice(2)), url);
+    if (url.startsWith('./')) assert.ok(publicFiles.includes(url.slice(2).split('?')[0]), url);
   }
   for (const file of publicFiles) assert.ok((await stat(file)).isFile(), file);
   assert.equal([...html.matchAll(/<h1\b/g)].length, 1);

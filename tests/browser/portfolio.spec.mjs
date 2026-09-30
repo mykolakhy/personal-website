@@ -38,6 +38,7 @@ for (const width of [320, 375, 390, 600, 768, 800, 801, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');
     await page.evaluate(() => document.fonts.ready);
+    for (const id of ['ci-case', 'api-case', 'team-case']) await page.locator(`#${id} summary`).click();
     const metrics = await page.evaluate(() => {
       const measure = (selector) => { const element = document.querySelector(selector); const rect = element.getBoundingClientRect(); return { width: rect.width, height: rect.height, top: rect.top, style: getComputedStyle(element).textOverflow, scrollWidth: element.scrollWidth, clientWidth: element.clientWidth }; };
       return { width: innerWidth, scrollWidth: document.documentElement.scrollWidth, header: [...document.querySelectorAll('.site-nav a, .wordmark')].map((el) => ({ height: el.getBoundingClientRect().height, right: el.getBoundingClientRect().right })), email: measure('.contact-link strong'), portrait: measure('.portrait-frame'), about: measure('.about-copy'), h1: measure('h1') };
@@ -96,4 +97,14 @@ test('core content and native disclosures work with JavaScript disabled', async 
   await expect(page.getByText('The selected job ran in approximately 15 minutes.', { exact: false })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Download CV PDF', exact: true })).toBeVisible();
   await context.close();
+});
+
+test('forced-colors keeps visible keyboard focus and control boundaries', async ({ page }) => {
+  await page.emulateMedia({ forcedColors: 'active' });
+  await page.goto('/');
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused();
+  const outline = await page.getByRole('link', { name: 'Skip to content' }).evaluate((el) => getComputedStyle(el).outlineStyle);
+  expect(outline).toBe('solid');
+  expect(await page.locator('.button-primary').evaluate((el) => getComputedStyle(el).borderTopStyle)).toBe('solid');
 });
