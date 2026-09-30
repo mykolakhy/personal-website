@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 
 // Repository-scoped hardening. Never changes account security or visibility.
 const repository = 'mykolakhy/personal-website';
@@ -37,6 +38,29 @@ api(`${prefix}/actions/permissions/workflow`, 'PUT', {
   can_approve_pull_request_reviews: false,
 });
 api(`${prefix}/vulnerability-alerts`, 'PUT');
+api(`${prefix}/automated-security-fixes`, 'PUT');
+if (!before.private) {
+  api(prefix, 'PATCH', { security_and_analysis: {
+    secret_scanning: { status: 'enabled' },
+    secret_scanning_push_protection: { status: 'enabled' },
+  } });
+  api(`${prefix}/private-vulnerability-reporting`, 'PUT');
+  api(`${prefix}/actions/permissions/fork-pr-contributor-approval`, 'PUT', { approval_policy: 'all_external_contributors' });
+}
+
+if (process.argv.includes('--protect-main')) {
+  const checkRuns = api(`${prefix}/commits/main/check-runs`).check_runs;
+  const integrationId = checkRuns.find(check => check.app?.slug === 'github-actions')?.app.id;
+  if (!Number.isInteger(integrationId)) throw new Error('Wait for the baseline Actions check before binding required checks to its verified app ID.');
+  const rules = JSON.parse(readFileSync(new URL('../.github/main-ruleset.json', import.meta.url), 'utf8'));
+  for (const rule of rules.rules) {
+    if (rule.type === 'required_status_checks') {
+      rule.parameters.required_status_checks.forEach(check => { check.integration_id = integrationId; });
+    }
+  }
+  const existing = api(`${prefix}/rulesets`).find(rule => rule.name === rules.name);
+  api(existing ? `${prefix}/rulesets/${existing.id}` : `${prefix}/rulesets`, existing ? 'PUT' : 'POST', rules);
+}
 
 const after = api(prefix);
 console.log(JSON.stringify({
@@ -48,5 +72,7 @@ console.log(JSON.stringify({
   actions: api(`${prefix}/actions/permissions`),
   allowedActions: api(`${prefix}/actions/permissions/selected-actions`),
   workflowPermissions: api(`${prefix}/actions/permissions/workflow`),
-  note: 'Main-branch rules are a separate step. Private-repository enforcement depends on the GitHub plan. Visibility was not changed.',
+  security: after.security_and_analysis,
+  mainRules: process.argv.includes('--protect-main') ? api(`${prefix}/rules/branches/main`) : 'Not requested',
+  note: 'Visibility and account settings were not changed. Rules apply to administrators too; there are no bypass actors.',
 }, null, 2));

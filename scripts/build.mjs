@@ -1,0 +1,60 @@
+import { copyFile, mkdir, readFile, writeFile, readdir } from 'node:fs/promises';
+import { resolve, dirname } from 'node:path';
+import { createHash } from 'node:crypto';
+import { pathToFileURL } from 'node:url';
+import { publicFiles, securityHeaders } from './public-files.mjs';
+
+const root = resolve(import.meta.dirname, '..');
+export function productionURL(value) {
+  if (!value) return null;
+  const url = new URL(value);
+  if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash || /^(localhost|127\.|\[::1\])/.test(url.hostname)) {
+    throw new Error('SITE_URL must be a public HTTPS URL without credentials, query or fragment.');
+  }
+  url.pathname = url.pathname.replace(/\/?$/, '/');
+  return url;
+}
+export async function build({ destination = resolve(root, 'dist'), siteURL = process.env.SITE_URL } = {}) {
+  const base = productionURL(siteURL);
+  let html = await readFile(resolve(root, 'index.html'), 'utf8');
+  let scriptHash;
+  if (base) {
+    const canonical = base.href;
+    const image = new URL('assets/social-preview.png', base).href;
+    const escape = (value) => value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;');
+    const structured = JSON.stringify({
+      '@context': 'https://schema.org', '@type': 'ProfilePage', url: canonical,
+      mainEntity: { '@type': 'Person', name: 'Mykola Khytra', jobTitle: 'Senior QA Engineer',
+        url: canonical, image: new URL('assets/portrait-640.jpg', base).href,
+        sameAs: ['https://www.linkedin.com/in/mykola-khytra/', 'https://github.com/mykolakhy'] },
+    }).replaceAll('<', '\\u003c');
+    scriptHash = 'sha256-' + createHash('sha256').update(structured).digest('base64');
+    html = html.replace('content="./assets/social-preview.png"', `content="${escape(image)}"`)
+      .replace('</head>', `  <link rel="canonical" href="${escape(canonical)}" />\n  <meta property="og:url" content="${escape(canonical)}" />\n  <script type="application/ld+json">${structured}</script>\n</head>`);
+  } else {
+    html = html.replace('</head>', '  <meta name="robots" content="noindex, nofollow" />\n</head>');
+  }
+  await mkdir(destination, { recursive: true });
+  // Preserve unexpected user files, but refuse to label that directory publishable.
+  const approved = new Set([...publicFiles, 'robots.txt', 'sitemap.xml', '_headers']);
+  const existing = await readdir(destination, { recursive: true, withFileTypes: true });
+  for (const entry of existing.filter((entry) => !entry.isDirectory())) {
+    const relative = resolve(entry.parentPath, entry.name).slice(destination.length + 1);
+    if (!approved.has(relative) || entry.isSymbolicLink()) throw new Error(`Unexpected build output: ${relative}. Move it out of dist before building.`);
+  }
+  for (const file of publicFiles) {
+    const target = resolve(destination, file);
+    await mkdir(dirname(target), { recursive: true });
+    if (file === 'index.html') await writeFile(target, html);
+    else await copyFile(resolve(root, file), target);
+  }
+  await writeFile(resolve(destination, 'robots.txt'), base ? `User-agent: *\nAllow: /\nSitemap: ${new URL('sitemap.xml', base).href}\n` : 'User-agent: *\nDisallow: /\n');
+  await writeFile(resolve(destination, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${base ? `<url><loc>${base.href.replaceAll('&', '&amp;').replaceAll('<', '&lt;')}</loc></url>` : ''}</urlset>\n`);
+  const headers = securityHeaders(scriptHash);
+  await writeFile(resolve(destination, '_headers'), `/*\n${Object.entries(headers).map(([key, value]) => `  ${key}: ${value}`).join('\n')}\n  Cache-Control: public, max-age=0, must-revalidate\n`);
+  return { destination, production: Boolean(base), files: publicFiles.length + 3 };
+}
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  const result = await build();
+  console.log(`Built ${result.files} allowlisted files in dist. ${result.production ? 'Production URL configured.' : 'Preview only: set SITE_URL before public deployment.'}`);
+}

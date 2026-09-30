@@ -10,7 +10,7 @@ One coordinated change, split into reviewable milestones rather than separate ch
 
 ## Publication boundary
 
-- The remote is private until the owner explicitly approves a change.
+- The owner explicitly approved public visibility; GitHub protections are active.
 - Never publish Job Search notes, QA artifacts, original photos with metadata, credentials or the unrelated Telegram workflow.
 - Public company/project claims must reflect the actual personal contribution; do not claim ownership of an entire team test suite.
 - Prefer a public CV without private contact details. Do not upload the original PDF before resolving its publication choice.

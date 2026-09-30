@@ -1,20 +1,102 @@
 # Mykola Khytra - personal website
 
-Static portfolio for a Senior QA Engineer. Website improvements are being implemented on a pull-request branch; repository setup is the initial baseline.
+A small, framework-free portfolio: HTML, CSS and a progressive-enhancement script.
+All visitor-facing assets are local; no analytics, external fonts, forms or runtime packages.
 
-## Workflow
+## Local development
 
-- `main` is protected: changes go through pull requests and CI.
-- GitHub Actions are SHA-pinned, allowlisted and read-only by default.
-- Private notes, local QA artifacts, credentials and original image metadata must not enter Git history or deployment output.
-- Public repository does not mean public deployment. Hosting and the production domain are a separate decision.
+Use Node.js 24 or newer.
 
-See [the implementation milestones](docs/IMPLEMENTATION-PLAN.md).
+```sh
+npm ci --ignore-scripts
+npm run dev
+```
 
-## Checks
+Open http://127.0.0.1:4173/. The server binds to this computer only and serves an
+explicit public-file allowlist. It does not expose Git, notes, original photos,
+dependencies, scripts or directory listings. Reload after editing HTML/CSS/JS.
 
-Use Node.js 24 or newer and run `npm test`.
+## Build and preview
+
+```sh
+npm run build
+npm run preview
+```
+
+Only `dist/` is deployment output. A build without a production URL is a
+non-indexable preview, with no invented canonical URL.
+
+Before publishing, configure the real HTTPS address, including any subpath:
+
+```sh
+SITE_URL=https://your-actual-domain.example/ npm run build
+```
+
+The example is documentation, not a configured domain. A production build adds
+canonical/Open Graph URLs, ProfilePage/Person structured data, robots.txt and a
+sitemap. The output uses relative resource paths and works under a subdirectory.
+
+`_headers` contains a CSP, no-sniff, frame protection, referrer and permissions
+policies. Netlify/Cloudflare Pages can use that format; other hosts need equivalent
+server configuration. The local preview applies those headers. Do not assume a
+host honors this file: verify HTTPS, headers, compression, caching and 404 behavior
+after deployment. No production host or deployment credentials are configured.
+
+## Verification
+
+```sh
+npm test
+npm run build
+npx playwright install --with-deps chromium firefox webkit
+npm run test:browser
+```
+
+Unit checks cover contrast tokens, links/assets, safe build output, image metadata,
+production metadata and server boundaries. Browser checks cover Chromium, Firefox
+and WebKit at nine widths (320-1440 px), axe scans, disclosures, keyboard/skip-link
+behavior, PDF responses, reduced motion, print styles, resource budgets and the
+no-JavaScript path. Automated axe checks do not certify WCAG compliance.
+
+GitHub CI runs the same checks. Reports and failure traces are retained for seven
+days; they are public, so test only the public portfolio, never private data.
+The `quality` and `browser-regression` checks are required before merging.
+
+## Content and assets
+
+- Edit copy in `index.html`; claim team-scale figures as a shared ecosystem, not
+  individually authored tests. Keep experience and availability current.
+- Fonts and their SIL OFL licenses are in `assets/fonts/`.
+- Optimized portraits are metadata-free AVIF/WebP/JPEG files. The original PNG is
+  deliberately ignored and never included in a build.
+- `npm run prepare:assets -- /absolute/path/to/a/new-photo.png` regenerates
+  optimized portraits, fonts and the social image. This is an optional maintainer
+  command: clones build using the committed assets without needing the original.
+- The public CV is selectable text, with business email/profile links and no
+  phone, street address or private job-search notes.
+- When adding a resource, update `scripts/public-files.mjs` explicitly.
+- `qa-artifacts/`, `tmp/` and `output/` are local-only. An unrelated existing
+  Telegram workflow is ignored and has not been published.
+
+## Repository protection
+
+Public visibility was approved by the owner. `main` requires pull requests,
+resolved conversations, up-to-date passing CI and a linear squash-only history;
+force pushes/deletion are blocked without bypass actors. There is one owner, so
+external reviewer approval is not required. Actions have read-only permissions,
+SHA-pinned allowlisted actions and no deployment secrets.
+
+Secret scanning/push protection, Dependabot alerts/security fixes and private
+vulnerability reporting are enabled. Account 2FA is the owner's responsibility;
+it has not been changed. See [SECURITY.md](SECURITY.md).
+
+The owner can reapply repo settings using `node scripts/configure-github.mjs
+--protect-main` with an authorized GitHub CLI session. That command is scoped to
+`mykolakhy/personal-website` and does not change visibility or account settings.
 
 ## Rights
 
-Personal copy, photographs and branding remain the property of their respective owners. No open-source license is granted by publishing this repository.
+Personal copy, photographs and branding remain the property of their respective
+owners. No open-source license is granted by publishing this repository.
+Third-party fonts retain their included licenses.
+
+See [the implementation milestones](docs/IMPLEMENTATION-PLAN.md).
