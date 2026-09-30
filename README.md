@@ -71,8 +71,9 @@ The `quality` and `browser-regression` checks are required before merging.
 - `npm run prepare:assets -- /absolute/path/to/a/new-photo.png` regenerates
   optimized portraits, fonts and the social image. This is an optional maintainer
   command: clones build using the committed assets without needing the original.
-- The public CV is selectable text, with business email/profile links and no
-  phone, street address or private job-search notes.
+- The downloadable CV is the owner's original two-page PDF, published with
+  explicit approval and copied without changes. It contains business email/profile
+  links, but no phone, street address or private job-search notes.
 - When adding a resource, update `scripts/public-files.mjs` explicitly.
 - `qa-artifacts/`, `tmp/` and `output/` are local-only. An unrelated existing
   Telegram workflow is ignored and has not been published.

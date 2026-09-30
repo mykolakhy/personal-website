@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile, stat, mkdtemp, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
+import { createHash } from 'node:crypto';
 import sharp from 'sharp';
 import { publicFiles } from '../scripts/public-files.mjs';
 import { build, productionURL } from '../scripts/build.mjs';
@@ -10,6 +11,13 @@ import { websiteServer } from '../scripts/serve.mjs';
 
 const html = await readFile('index.html', 'utf8');
 const css = await readFile('styles.css', 'utf8');
+
+test('downloadable CV preserves the owner-approved original PDF exactly', async () => {
+  // Update this fingerprint only when the owner approves a new original CV.
+  const cv = await readFile('assets/downloads/mykola-khytra-cv.pdf');
+  assert.equal(createHash('sha256').update(cv).digest('hex'), '476bc147c7f9b299ea81438a16db23ed9e327bd2b986ba97d61a76225e3c2821');
+  assert.equal(cv.subarray(0, 5).toString(), '%PDF-');
+});
 
 test('local links, anchors, IDs and referenced resources are valid', async () => {
   const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
@@ -49,6 +57,7 @@ test('portrait variants are small and contain no EXIF/XMP', async () => {
 test('build publishes only the allowlist and configures real production metadata', async () => {
   const destination = await mkdtemp(resolve(tmpdir(), 'portfolio-build-'));
   await build({ destination, siteURL: 'https://portfolio.example/qa/' });
+  assert.deepEqual(await readFile(resolve(destination, 'assets/downloads/mykola-khytra-cv.pdf')), await readFile('assets/downloads/mykola-khytra-cv.pdf'));
   const result = await readFile(resolve(destination, 'index.html'), 'utf8');
   assert.match(result, /rel="canonical" href="https:\/\/portfolio\.example\/qa\/"/);
   assert.match(result, /content="https:\/\/portfolio\.example\/qa\/assets\/social-preview.png"/);
@@ -85,6 +94,8 @@ test('preview serves safe resources but no private files, listings or writes', a
     assert.ok([400, 404].includes((await fetch(url + path)).status), path);
   }
   assert.equal((await fetch(url, { method: 'POST' })).status, 405);
-  assert.equal((await fetch(url + '/assets/downloads/mykola-khytra-cv.pdf')).headers.get('content-type'), 'application/pdf');
+  const cvResponse = await fetch(url + '/assets/downloads/mykola-khytra-cv.pdf');
+  assert.equal(cvResponse.headers.get('content-type'), 'application/pdf');
+  assert.deepEqual(Buffer.from(await cvResponse.arrayBuffer()), await readFile('assets/downloads/mykola-khytra-cv.pdf'));
   assert.equal((await fetch(url + '/styles.css', { method: 'HEAD' })).status, 200);
 });
