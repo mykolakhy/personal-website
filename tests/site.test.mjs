@@ -7,6 +7,7 @@ import { createHash } from 'node:crypto';
 import sharp from 'sharp';
 import { publicFiles } from '../scripts/public-files.mjs';
 import { build, productionURL } from '../scripts/build.mjs';
+import { pagesSiteURL } from '../scripts/build-pages.mjs';
 import { websiteServer } from '../scripts/serve.mjs';
 
 const html = await readFile('index.html', 'utf8');
@@ -120,12 +121,29 @@ test('build publishes only the allowlist and configures real production metadata
   assert.equal(structured['@type'], 'ProfilePage');
   const files = await readdir(destination, { recursive: true, withFileTypes: true });
   const actual = files.filter((item) => item.isFile()).map((item) => resolve(item.parentPath, item.name).slice(destination.length + 1)).sort();
-  assert.deepEqual(actual, [...publicFiles, 'robots.txt', 'sitemap.xml', '_headers'].sort());
+  assert.deepEqual(actual, [...publicFiles, 'robots.txt', 'sitemap.xml', '_headers', '404.html'].sort());
   assert.doesNotMatch(actual.join('\n'), /avatar\.png|\.git|qa-artifacts|node_modules|telegram|README|\.env/);
   assert.match(await readFile(resolve(destination, '_headers'), 'utf8'), /script-src 'self' 'sha256-/);
-  await build({ destination });
+  const notFound = await readFile(resolve(destination, '404.html'), 'utf8');
+  assert.match(notFound, /<h1>404\.<\/h1>/);
+  assert.match(notFound, /href="\/qa\/styles.css"/);
+  assert.match(notFound, /href="\/qa\/"/);
+  assert.match(notFound, /noindex, follow/);
+  await build({ destination, siteURL: null });
   assert.match(await readFile(resolve(destination, 'index.html'), 'utf8'), /noindex, nofollow/);
   assert.doesNotMatch(await readFile(resolve(destination, 'index.html'), 'utf8'), /rel="canonical"/);
+  assert.match(await readFile(resolve(destination, '404.html'), 'utf8'), /href="\/styles.css"/);
+  assert.match(await readFile(resolve(destination, '_headers'), 'utf8'), /X-Robots-Tag: noindex, nofollow/);
+});
+
+test('Pages production requires a valid URL, while preview branches cannot be indexed', () => {
+  assert.equal(pagesSiteURL({ CF_PAGES_BRANCH: 'main', SITE_URL: 'https://mykolakhytra.com' }), 'https://mykolakhytra.com/');
+  for (const branch of ['deploy-cloudflare-pages', 'feature/main', 'MAIN']) {
+    assert.equal(pagesSiteURL({ CF_PAGES_BRANCH: branch, SITE_URL: 'https://mykolakhytra.com/' }), null);
+  }
+  assert.throws(() => pagesSiteURL({ CF_PAGES_BRANCH: 'main' }), /SITE_URL is required/);
+  assert.throws(() => pagesSiteURL({ CF_PAGES_BRANCH: 'main', SITE_URL: 'http://mykolakhytra.com' }), /public HTTPS URL/);
+  assert.throws(() => pagesSiteURL({ SITE_URL: 'https://mykolakhytra.com/' }), /CF_PAGES_BRANCH is required/);
 });
 
 test('production URL validation rejects unsafe or non-public inputs', () => {

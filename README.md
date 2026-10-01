@@ -45,7 +45,32 @@ sitemap. The output uses relative resource paths and works under a subdirectory.
 policies. Netlify/Cloudflare Pages can use that format; other hosts need equivalent
 server configuration. The local preview applies those headers. Do not assume a
 host honors this file: verify HTTPS, headers, compression, caching and 404 behavior
-after deployment. No production host or deployment credentials are configured.
+after deployment. No deployment credentials are stored in this repository.
+
+## Cloudflare Pages deployment
+
+The production domain is `https://mykolakhytra.com/`. Connect only
+`mykolakhy/personal-website` through the Cloudflare Workers and Pages GitHub app.
+Use these build settings:
+
+- Production branch: `main`; framework preset: None; repository root: unchanged.
+- Build command: `npm ci --ignore-scripts && npm test && npm run build:pages`.
+- Output directory: `dist` (never the repository root).
+- Variables: `NODE_VERSION=24`, `SKIP_DEPENDENCY_INSTALL=1`, and
+  `SITE_URL=https://mykolakhytra.com/`.
+
+The Pages-specific build requires a valid production URL for `main`. Other
+branches remain non-indexable previews even if setup copies `SITE_URL` to them.
+Dependency installation uses the lockfile without lifecycle scripts, and the
+unit checks must pass before publication. Protected GitHub pull requests also
+run the browser regression checks before merging to `main`.
+
+The build generates a top-level `404.html` to prevent Pages from treating this
+static portfolio as an SPA and returning the homepage for nonexistent paths.
+Its stylesheet, icon and home links remain valid on nested error URLs and under
+a configured subpath. Connect the custom domain in the Pages project before
+adding DNS records; verify live HTTPS, security headers, metadata, the original
+CV and actual 404 responses after each hosting configuration change.
 
 ## Verification
 
