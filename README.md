@@ -1,76 +1,76 @@
-# Mykola Khytra - personal website
+# Mykola Khytra — personal website
 
-A small, framework-free portfolio: HTML, CSS and a progressive-enhancement script.
-All visitor-facing assets are local; no analytics, external fonts, forms or runtime packages.
+**Live site: [mykolakhytra.com](https://mykolakhytra.com/)**
+
+A framework-free QA portfolio built with HTML, CSS and vanilla JavaScript.
+Fonts and images are self-hosted; there are no analytics, forms or runtime dependencies.
 
 ## Local development
 
-Use Node.js 24 or newer.
+Requires Node.js 24 or newer and npm. Run commands from the repository root.
 
 ```sh
 npm ci --ignore-scripts
 npm run dev
 ```
 
-Open http://127.0.0.1:4173/. The server binds to this computer only and serves an
-explicit public-file allowlist. It does not expose Git, notes, original photos,
-dependencies, scripts or directory listings. Reload after editing HTML/CSS/JS.
+Open [127.0.0.1:4173](http://127.0.0.1:4173/). Reload the browser after editing
+files; there is no hot reload. The server binds to loopback and serves only
+allowlisted public files.
 
 ## Build and preview
 
 ```sh
 npm run build
-npm run preview
+npm run preview -- --port 4174
 ```
 
-Only `dist/` is deployment output. A build without a production URL is a
-non-indexable preview, with no invented canonical URL.
+Open [127.0.0.1:4174](http://127.0.0.1:4174/). The separate port lets dev and
+preview run together; plain `npm run preview` uses port 4173.
+Rebuild after source changes: preview serves the generated `dist/` files.
 
-Before writing output, the build verifies every allowlisted source and snapshots
-its bytes. Sources must be regular files: symbolic links, including linked parent
-directories, are rejected. A missing or unsafe source leaves existing output
-unchanged; private data cannot be copied through a linked public resource.
-
-Before publishing, configure the real HTTPS address, including any subpath:
+When `SITE_URL` is unset, the build is a non-indexable preview.
+For a production build:
 
 ```sh
-SITE_URL=https://your-actual-domain.example/ npm run build
+SITE_URL=https://mykolakhytra.com/ npm run build
 ```
 
-The example is documentation, not a configured domain. A production build adds
-canonical/Open Graph URLs, ProfilePage/Person structured data, robots.txt and a
-sitemap. The output uses relative resource paths and works under a subdirectory.
+Only `dist/` is deployment output. Production builds configure canonical/social
+URLs, structured data and sitemap entries. All builds generate `robots.txt`,
+`sitemap.xml`, `404.html` and security headers in `_headers`. The build rejects
+symlinked sources and unexpected output files.
 
-`_headers` contains a CSP, no-sniff, frame protection, referrer and permissions
-policies. Netlify/Cloudflare Pages can use that format; other hosts need equivalent
-server configuration. The local preview applies those headers. Do not assume a
-host honors this file: verify HTTPS, headers, compression, caching and 404 behavior
-after deployment. No deployment credentials are stored in this repository.
+## Where to make changes
 
-## Cloudflare Pages deployment
+| Change | File or directory |
+| --- | --- |
+| Text, sections and links | [index.html](index.html) |
+| Layout, colors and responsive styles | [styles.css](styles.css) |
+| Case-study deep-link behavior | [app.js](app.js) |
+| Images, fonts and downloadable CV | [assets/](assets/) |
+| Deployment allowlist and security headers | [scripts/public-files.mjs](scripts/public-files.mjs) |
+| Build and local server | [scripts/](scripts/) |
+| Automated checks | [tests/](tests/) |
 
-The production domain is `https://mykolakhytra.com/`. Connect only
-`mykolakhy/personal-website` through the Cloudflare Workers and Pages GitHub app.
-Use these build settings:
+Keep claims evidence-based: distinguish personal contributions from team-scale
+figures and CI-job improvements from whole-pipeline results. Keep experience,
+availability and manual/automation/AI positioning accurate.
 
-- Production branch: `main`; framework preset: None; repository root: unchanged.
-- Build command: `npm ci --ignore-scripts && npm test && npm run build:pages`.
-- Output directory: `dist` (never the repository root).
-- Variables: `NODE_VERSION=24`, `SKIP_DEPENDENCY_INSTALL=1`, and
-  `SITE_URL=https://mykolakhytra.com/`.
+Optimized assets are committed, so normal builds do not need the original photo.
+To replace the portrait, pass the path to a private source image stored outside
+the repository:
 
-The Pages-specific build requires a valid production URL for `main`. Other
-branches remain non-indexable previews even if setup copies `SITE_URL` to them.
-Dependency installation uses the lockfile without lifecycle scripts, and the
-unit checks must pass before publication. Protected GitHub pull requests also
-run the browser regression checks before merging to `main`.
+```sh
+npm run prepare:assets -- /absolute/path/to/photo.png
+```
 
-The build generates a top-level `404.html` to prevent Pages from treating this
-static portfolio as an SPA and returning the homepage for nonexistent paths.
-Its stylesheet, icon and home links remain valid on nested error URLs and under
-a configured subpath. Connect the custom domain in the Pages project before
-adding DNS records; verify live HTTPS, security headers, metadata, the original
-CV and actual 404 responses after each hosting configuration change.
+This regenerates portrait variants and local fonts, and renders
+[assets/social-preview.svg](assets/social-preview.svg) as the PNG social preview.
+Retain the font licenses in
+`assets/fonts/`. Replacing the CV requires owner approval and updating its
+fingerprint in [tests/site.test.mjs](tests/site.test.mjs). Add new public resources
+to `scripts/public-files.mjs`.
 
 ## Verification
 
@@ -81,64 +81,54 @@ npx playwright install --with-deps chromium firefox webkit
 npm run test:browser
 ```
 
-Unit checks cover contrast tokens, links/assets, safe build output, image metadata,
-production metadata and server boundaries. Browser checks cover Chromium, Firefox
-and WebKit at nine widths (320-1440 px), axe scans, disclosures, keyboard/skip-link
-behavior, PDF responses, reduced motion, print styles, resource budgets and the
-no-JavaScript path. Automated axe checks do not certify WCAG compliance.
+Install browser binaries on first setup and after Playwright upgrades.
+Checks cover content/assets, build and server boundaries, Chromium/Firefox/WebKit,
+responsive layouts at 320–1440 px, accessibility, keyboard navigation, downloads,
+print, reduced motion and no-JavaScript behavior. Automated checks are not a full
+WCAG certification or real-device audit.
 
-GitHub CI runs the same checks. Reports and failure traces are retained for seven
-days; they are public, so test only the public portfolio, never private data.
-The `quality` and `browser-regression` checks are required before merging.
+GitHub CI also audits dependencies. Both `quality` and `browser-regression` must
+pass before merging. Reports/traces are public and retained for seven days;
+test only public content.
 
-## Content and assets
+## Cloudflare Pages deployment
 
-- Edit copy in `index.html`; claim team-scale figures as a shared ecosystem, not
-  individually authored tests. Keep experience and availability current.
-- Positioning spans manual, general and automation QA. Expertise precedes the
-  automation case studies; the AI workflow describes confirmed uses of Claude Code
-  and Codex without claiming AI-product/LLM expertise or measured AI speedups.
-- New manual or AI case studies need a real task, personal contribution and
-  supported outcome. Do not invent them to balance the existing automation cases.
-- CI performance improvements covered many jobs, with speedups of up to four
-  times, not all jobs or the whole delivery pipeline. The 60-to-15-minute reduction
-  is a concrete result, not a promise of the same speedup for every job. Overnight
-  regression maintenance covered roughly 30 of around 70 jobs; this is not a count
-  of accelerated jobs.
-- The shared repository served roughly 10-15 QA engineers, automation engineers
-  and developers. TestRail-to-Testomat migration was independently completed by
-  the owner. Do not publish coverage percentages without defining the metric.
-- Fonts and their SIL OFL licenses are in `assets/fonts/`.
-- Optimized portraits are metadata-free AVIF/WebP/JPEG files. The original PNG is
-  deliberately ignored and never included in a build.
-- `npm run prepare:assets -- /absolute/path/to/a/new-photo.png` regenerates
-  optimized portraits, fonts and the social image. This is an optional maintainer
-  command: clones build using the committed assets without needing the original.
-- The downloadable CV is the owner's original two-page PDF, published with
-  explicit approval and copied without changes. It contains business email/profile
-  links, but no phone, street address or private job-search notes.
-- When adding a resource, update `scripts/public-files.mjs` explicitly.
-- `qa-artifacts/`, `tmp/` and `output/` are local-only. Generated reports and
-  temporary files are not part of source control or deployment output.
+Merges to `main` deploy automatically through the GitHub integration.
 
-## Repository protection
+- Repository: `mykolakhy/personal-website`; production branch: `main`.
+- Framework preset: None; repository root: unchanged; output directory: `dist`.
+- Build command: `npm ci --ignore-scripts && npm test && npm run build:pages`.
+- Variables: `NODE_VERSION=24`, `SKIP_DEPENDENCY_INSTALL=1`,
+  `SITE_URL=https://mykolakhytra.com/`.
 
-Public visibility was approved by the owner. `main` requires pull requests,
-resolved conversations, up-to-date passing CI and a linear squash-only history;
-force pushes/deletion are blocked without bypass actors. There is one owner, so
-external reviewer approval is not required. Actions have read-only permissions,
-SHA-pinned allowlisted actions and no deployment secrets.
+Keep the Cloudflare GitHub app restricted to this repository.
+Cloudflare supplies `CF_PAGES_BRANCH`. `build:pages` requires a valid production
+URL on `main`; other branches remain non-indexable even if they inherit `SITE_URL`.
+The generated `404.html` prevents the static site from falling back to the homepage
+for missing paths.
 
-Secret scanning/push protection, Dependabot alerts/security fixes and private
-vulnerability reporting are enabled. Account 2FA is the owner's responsibility;
-it has not been changed. See [SECURITY.md](SECURITY.md).
+After hosting changes, verify live HTTPS, redirects, security headers, metadata,
+CV downloads and actual 404 responses. The local preview is not a full Cloudflare
+emulator.
 
-The owner can reapply repo settings using `node scripts/configure-github.mjs
---protect-main` with an authorized GitHub CLI session. That command is scoped to
-`mykolakhy/personal-website` and does not change visibility or account settings.
+## Security
+
+Do not commit credentials, private job-search notes or original photos.
+Local reports, temporary files, dependencies and build output are ignored by Git
+and excluded from deployment. See [SECURITY.md](SECURITY.md) for reporting and
+repository protections.
+
+Owner-only maintenance: with an authorized GitHub CLI session, reapply repository
+protections using:
+
+```sh
+node scripts/configure-github.mjs --protect-main
+```
+
+This changes repository settings, not account security or visibility.
 
 ## Rights
 
-Personal copy, photographs and branding remain the property of their respective
-owners. No open-source license is granted by publishing this repository.
-Third-party fonts retain their included licenses.
+Personal copy, photographs and branding remain the property of their owners.
+Publishing this repository does not grant an open-source license.
+Third-party fonts retain their included SIL OFL licenses.
