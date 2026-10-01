@@ -6,7 +6,9 @@ const root = resolve(import.meta.dirname, '..');
 const fonts = [
   ['@fontsource-variable/space-grotesk', 'space-grotesk-latin-wght-normal.woff2', 'space-grotesk'],
   ['@fontsource-variable/jetbrains-mono', 'jetbrains-mono-latin-wght-normal.woff2', 'jetbrains-mono'],
+  ['@fontsource-variable/jetbrains-mono', 'jetbrains-mono-cyrillic-wght-normal.woff2', 'jetbrains-mono'],
   ...[400, 500, 600].map((weight) => ['@fontsource/ibm-plex-sans', 'ibm-plex-sans-latin-' + weight + '-normal.woff2', 'ibm-plex-sans']),
+  ...[400, 500, 600].map((weight) => ['@fontsource/ibm-plex-sans', 'ibm-plex-sans-cyrillic-' + weight + '-normal.woff2', 'ibm-plex-sans']),
 ];
 await mkdir(resolve(root, 'assets/fonts'), { recursive: true });
 for (const [pkg, file, license] of fonts) {

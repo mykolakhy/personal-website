@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { publicFiles } from '../scripts/public-files.mjs';
+import { translationFiles } from '../scripts/i18n.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const privateMarker = 'Synthetic private data must never reach the build.\n';
@@ -23,7 +24,7 @@ async function fixture(context, { linkedFile, linkedDirectory, missingFile, dire
     await mkdir(dirname(target), { recursive: true });
     await symlink(privateDirectory, target, 'dir');
   }
-  for (const file of ['scripts/build.mjs', 'scripts/public-files.mjs', ...publicFiles]) {
+  for (const file of ['scripts/build.mjs', 'scripts/public-files.mjs', 'scripts/i18n.mjs', ...publicFiles, ...translationFiles]) {
     if (file === missingFile) continue;
     const target = resolve(source, file);
     await mkdir(dirname(target), { recursive: true });
@@ -41,7 +42,7 @@ async function fixture(context, { linkedFile, linkedDirectory, missingFile, dire
     await writeFile(resolve(source, 'assets/fonts/ibm-plex-sans-OFL.txt'), privateMarker);
   }
   const { build } = await import(pathToFileURL(resolve(source, 'scripts/build.mjs')));
-  return { destination, build: () => build({ destination }) };
+  return { source, destination, build: () => build({ destination }) };
 }
 
 for (const [name, options] of [
@@ -52,6 +53,8 @@ for (const [name, options] of [
   ['dangling public-file link', { linkedFile: 'assets/fonts/ibm-plex-sans-OFL.txt', danglingLink: true }],
   ['directory in place of a public file', { directoryFile: 'assets/fonts/ibm-plex-sans-OFL.txt' }],
   ['missing public file', { missingFile: 'assets/fonts/ibm-plex-sans-OFL.txt' }],
+  ['translation linked to private data', { linkedFile: 'locales/uk.json' }],
+  ['translation directory linked outside the source tree', { linkedDirectory: 'locales' }],
 ]) {
   test(`build rejects ${name} before creating output`, async (context) => {
     const { build, destination } = await fixture(context, options);
@@ -67,5 +70,17 @@ test('invalid public sources leave existing output unchanged', async (context) =
   await writeFile(resolve(destination, 'index.html'), previousHTML);
   await assert.rejects(build(), /Unsafe public source:/);
   assert.equal(await readFile(resolve(destination, 'index.html'), 'utf8'), previousHTML);
+  assert.deepEqual(await readdir(destination), ['index.html']);
+});
+
+test('incomplete translations leave an existing build unchanged', async context => {
+  const { source, build, destination } = await fixture(context);
+  const catalog = JSON.parse(await readFile(resolve(source, 'locales/de.json'), 'utf8'));
+  delete catalog['hero.tagline'];
+  await writeFile(resolve(source, 'locales/de.json'), JSON.stringify(catalog));
+  await mkdir(destination);
+  await writeFile(resolve(destination, 'index.html'), 'Previously built public content.');
+  await assert.rejects(build(), /Missing de translation: hero.tagline/);
+  assert.equal(await readFile(resolve(destination, 'index.html'), 'utf8'), 'Previously built public content.');
   assert.deepEqual(await readdir(destination), ['index.html']);
 });

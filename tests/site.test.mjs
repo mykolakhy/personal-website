@@ -9,8 +9,10 @@ import { publicFiles } from '../scripts/public-files.mjs';
 import { build, productionURL } from '../scripts/build.mjs';
 import { pagesSiteURL } from '../scripts/build-pages.mjs';
 import { websiteServer } from '../scripts/serve.mjs';
+import { renderPage, generatedPages, languages } from '../scripts/i18n.mjs';
 
-const html = await readFile('index.html', 'utf8');
+// Keep existing English copy regressions independent of translation wrappers.
+const html = renderPage(await readFile('index.html', 'utf8'), 'en');
 const css = await readFile('styles.css', 'utf8');
 
 test('positioning covers manual, general and automation QA before the case studies', () => {
@@ -30,7 +32,7 @@ test('AI positioning describes practical agent workflows without unverified expe
   const workflow = html.match(/<section id="ai-workflow"([\s\S]*?)<\/section>/)?.[1];
   assert.ok(workflow, 'AI workflow exists');
   for (const phrase of ['Claude Code and Codex', 'repository analysis', 'test design', 'Understand the context', 'Build and improve', 'Check the result', 'verify behavior manually']) assert.ok(workflow.includes(phrase), phrase);
-  assert.match(html, /href="#ai-workflow">See the workflow/);
+  assert.match(html, /href="#ai-workflow"><span>See the workflow/);
   assert.match(css, /html \{ scroll-behavior: auto;/, 'anchor navigation must not race with disclosure scrolling');
   const description = html.match(/<meta name="description" content="([^"]+)"/)[1];
   assert.match(description, /Manual, API, and automated testing/);
@@ -81,7 +83,7 @@ test('local links, anchors, IDs and referenced resources are valid', async () =>
   urls.push(...[...css.matchAll(/url\("([^"]+)"\)/g)].map((match) => match[1]));
   for (const url of urls) {
     if (url.startsWith('#')) assert.ok(ids.includes(url.slice(1)), url);
-    if (url.startsWith('./')) assert.ok(publicFiles.includes(url.slice(2).split('?')[0]), url);
+    if (url.startsWith('./')) assert.ok(publicFiles.includes(url.slice(2).split('?')[0]) || languages.some(({ path }) => url === `./${path}${path ? '' : '?lang=en'}`), url);
   }
   for (const file of publicFiles) assert.ok((await stat(file)).isFile(), file);
   assert.equal([...html.matchAll(/<h1\b/g)].length, 1);
@@ -121,7 +123,7 @@ test('build publishes only the allowlist and configures real production metadata
   assert.equal(structured['@type'], 'ProfilePage');
   const files = await readdir(destination, { recursive: true, withFileTypes: true });
   const actual = files.filter((item) => item.isFile()).map((item) => resolve(item.parentPath, item.name).slice(destination.length + 1)).sort();
-  assert.deepEqual(actual, [...publicFiles, 'robots.txt', 'sitemap.xml', '_headers', '404.html'].sort());
+  assert.deepEqual(actual, [...new Set([...publicFiles, ...generatedPages, 'robots.txt', 'sitemap.xml', '_headers'])].sort());
   assert.doesNotMatch(actual.join('\n'), /avatar\.png|\.git|qa-artifacts|node_modules|telegram|README|\.env/);
   assert.match(await readFile(resolve(destination, '_headers'), 'utf8'), /script-src 'self' 'sha256-/);
   const notFound = await readFile(resolve(destination, '404.html'), 'utf8');
