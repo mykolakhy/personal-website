@@ -53,6 +53,9 @@ h3 { font-size: 24px; line-height: 1.3; }
 .eyebrow + h2 { margin-top: 12px; }
 .hero-tagline { max-width: 36ch; margin: 24px 0 0; color: var(--accent); font: 500 clamp(22px, 2.4vw, 30px)/1.35 var(--font-display); letter-spacing: -.02em; }
 .hero-lede { max-width: 55ch; margin: 16px 0 0; color: var(--text-body); font-size: 20px; line-height: 1.55; }
+.hero-ai { max-width: 62ch; margin: 16px 0 0; color: var(--text-body); font-size: 16px; line-height: 1.6; }
+.hero-ai .mono-label { display: inline-block; margin-right: 8px; }
+.hero-ai a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: var(--accent); text-underline-offset: 4px; white-space: nowrap; }
 .hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 20px; margin-top: 32px; }
 .button { display: inline-flex; justify-content: center; align-items: center; gap: 12px; min-height: 48px; padding: 12px 18px; border: 1px solid transparent; border-radius: 6px; font: 600 15px/1.4 var(--font-sans); text-decoration: none; transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease; }
 .button-primary { background: var(--accent); color: var(--bg-page); }
@@ -110,8 +113,10 @@ details[open] .disclosure-mark { transform: rotate(45deg); }
 .principle-icon { color: var(--accent); font: 500 12px/1.4 var(--font-mono); }
 .principle h3 { margin: 16px 0 10px; font-size: 22px; }
 .principle p { margin: 0; color: var(--text-muted); }
-.tool-group { padding: 24px; background: var(--bg-sunken); border: 1px solid var(--border-hairline); border-radius: 10px; }
-.tool-group .tag-list { margin-top: 24px; }
+.tool-group { display: flex; flex-direction: column; padding: 24px; background: var(--bg-sunken); border: 1px solid var(--border-hairline); border-radius: 10px; }
+.tool-group h3 { font-size: 22px; }
+.tool-group p { margin: 12px 0 0; color: var(--text-body); }
+.tool-group .tag-list { margin-top: auto; padding-top: 24px; }
 .writing-list { border-top: 1px solid var(--border-hairline); }
 .writing-item { padding: 24px 0; border-bottom: 1px solid var(--border-hairline); }
 .writing-item h3 { margin: 10px 0 12px; font-size: 22px; }
@@ -120,6 +125,7 @@ details[open] .disclosure-mark { transform: rotate(45deg); }
 .section-contact { background: var(--bg-sunken); }
 .contact-grid { grid-template-columns: 1fr 1fr; }
 .contact-lede { max-width: 48ch; margin: 24px 0; color: var(--text-muted); font-size: 18px; }
+.role-scope { color: var(--text-body); font-weight: 500; }
 .availability { display: flex; align-items: center; gap: 12px; color: var(--text-body); font: 400 12px/1.7 var(--font-mono); }
 .contact-links { min-width: 0; border-top: 1px solid var(--border-hairline); }
 .contact-link { display: grid; grid-template-columns: minmax(0, 1fr) 20px; gap: 8px 16px; align-items: center; padding: 18px 4px; border-bottom: 1px solid var(--border-hairline); text-decoration: none; }
@@ -177,7 +183,7 @@ details[open] .disclosure-mark { transform: rotate(45deg); }
 @media print {
   :root { color-scheme: light; }
   body { background: white; color: #222; font-size: 11pt; }
-  h1, h2, h3, .prose, .prose strong, .hero-tagline, .hero-lede, .stat strong, .stat span, .eyebrow, .mono-label, .section-intro, .case-card p, .principle p, .experience-list p:last-child, .writing-item p:last-child, .contact-lede, .contact-link strong, .contact-label, .availability, .footer-inner, .tag, summary, .case-number, .case-type { color: #222; }
+  h1, h2, h3, .prose, .prose strong, .hero-tagline, .hero-lede, .hero-ai, .hero-ai a, .stat strong, .stat span, .eyebrow, .mono-label, .section-intro, .case-card p, .principle p, .tool-group p, .experience-list p:last-child, .writing-item p:last-child, .contact-lede, .role-scope, .contact-link strong, .contact-label, .availability, .footer-inner, .tag, summary, .case-number, .case-type { color: #222; }
   .site-header, .skip-link, .hero-actions, .case-link, .experience-cv, .contact-arrow, .status-dot, .disclosure-mark { display: none; }
   .container { width: 100%; }
   .hero-inner, .section { padding: 20px 0; }

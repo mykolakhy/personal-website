@@ -12,9 +12,14 @@ test('all sections, resources and local navigation work without errors', async (
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Mykola Khytra.');
   await expect(page.getByText('Up to 4×', { exact: true })).toBeVisible();
   await expect(page.getByText('faster execution for CI jobs', { exact: true })).toBeVisible();
-  await expect(page.locator('main section')).toHaveCount(8);
+  await expect(page.locator('main section')).toHaveCount(9);
+  await expect(page.getByRole('heading', { name: 'Manual & product QA', exact: true })).toBeVisible();
+  await expect(page.locator('.hero-ai')).toContainText('Claude Code & Codex');
   const links = await page.locator('a[href^="#"]').evaluateAll((links) => links.map((link) => ({ href: link.getAttribute('href'), valid: Boolean(document.getElementById(link.hash.slice(1))) })));
   expect(links.every((link) => link.valid)).toBe(true);
+  await page.getByRole('link', { name: 'See the workflow', exact: true }).click();
+  await expect(page).toHaveURL(/#ai-workflow$/);
+  await expect(page.locator('#ai-workflow .principle')).toHaveCount(3);
   await page.getByRole('link', { name: 'Read the CI case' }).click();
   await expect(page.locator('#ci-case')).toHaveAttribute('open', '');
   await expect(page.locator('#ci-case summary')).toBeFocused();
@@ -48,13 +53,15 @@ for (const width of [320, 375, 390, 600, 768, 800, 801, 1024, 1440]) {
     for (const id of ['ci-case', 'api-case', 'team-case']) await page.locator(`#${id} summary`).click();
     const metrics = await page.evaluate(() => {
       const measure = (selector) => { const element = document.querySelector(selector); const rect = element.getBoundingClientRect(); return { width: rect.width, height: rect.height, top: rect.top, style: getComputedStyle(element).textOverflow, scrollWidth: element.scrollWidth, clientWidth: element.clientWidth }; };
-      return { width: innerWidth, scrollWidth: document.documentElement.scrollWidth, header: [...document.querySelectorAll('.site-nav a, .wordmark')].map((el) => ({ height: el.getBoundingClientRect().height, right: el.getBoundingClientRect().right })), email: measure('.contact-link strong'), portrait: measure('.portrait-frame'), about: measure('.about-copy'), h1: measure('h1') };
+      return { width: innerWidth, scrollWidth: document.documentElement.scrollWidth, header: [...document.querySelectorAll('.site-nav a, .wordmark')].map((el) => ({ height: el.getBoundingClientRect().height, right: el.getBoundingClientRect().right })), expertise: [...document.querySelectorAll('#expertise .tool-group')].map(el => ({ left: el.getBoundingClientRect().left, right: el.getBoundingClientRect().right })), aiLink: measure('.hero-ai a'), email: measure('.contact-link strong'), portrait: measure('.portrait-frame'), about: measure('.about-copy'), h1: measure('h1') };
     });
     expect(metrics.width).toBe(width);
     expect(metrics.scrollWidth).toBeLessThanOrEqual(width + 1);
     expect(metrics.email.style).not.toBe('ellipsis');
     expect(metrics.email.scrollWidth).toBeLessThanOrEqual(metrics.email.clientWidth + 1);
     for (const target of metrics.header) { expect(target.height).toBeGreaterThanOrEqual(44); expect(target.right).toBeLessThanOrEqual(width); }
+    expect(metrics.aiLink.height).toBeGreaterThanOrEqual(44);
+    for (const card of metrics.expertise) { expect(card.left).toBeGreaterThanOrEqual(0); expect(card.right).toBeLessThanOrEqual(width); }
     if (width > 800) expect(Math.abs(metrics.portrait.top - metrics.about.top)).toBeLessThan(1);
     await page.getByRole('navigation').getByRole('link', { name: 'Contact' }).click();
     await expect.poll(() => page.locator('#contact-title').evaluate((element) => element.getBoundingClientRect().top)).toBeGreaterThan(64);
@@ -94,12 +101,18 @@ test('reduced motion, print and resource budgets', async ({ page }) => {
   await expect(page.locator('.site-header')).toBeHidden();
   expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe('rgb(255, 255, 255)');
   expect(await page.locator('#contact-title').evaluate((el) => getComputedStyle(el).color)).toBe('rgb(34, 34, 34)');
+  expect(await page.locator('.hero-ai').evaluate((el) => getComputedStyle(el).color)).toBe('rgb(34, 34, 34)');
+  expect(await page.locator('.tool-group p').first().evaluate((el) => getComputedStyle(el).color)).toBe('rgb(34, 34, 34)');
 });
 
 test('core content and native disclosures work with JavaScript disabled', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
   await page.goto('http://127.0.0.1:4180/');
+  await expect(page.getByRole('heading', { name: 'Manual & product QA', exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'See the workflow', exact: true }).click();
+  await expect(page).toHaveURL(/#ai-workflow$/);
+  await expect(page.locator('#ai-workflow')).toContainText('Claude Code and Codex');
   await page.locator('#ci-case summary').click();
   await expect(page.getByText('Up to four times faster execution across optimized CI jobs, including a runtime reduction from approximately 60 minutes to 15.', { exact: false })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Download CV PDF', exact: true })).toBeVisible();

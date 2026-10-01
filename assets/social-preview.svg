@@ -6,8 +6,8 @@
     <text x="94" y="128" fill="#9aa5b1" font-size="22" letter-spacing="2">KRAKÓW, POLAND</text>
     <text x="64" y="265" fill="#edf1f5" font-size="88" font-weight="700">Mykola Khytra.</text>
     <text x="64" y="337" fill="#c6f24e" font-size="38">Senior QA Engineer</text>
-    <text x="64" y="427" fill="#c9d1d9" font-size="30">Reliable tests. Faster feedback.</text>
-    <text x="64" y="510" fill="#9aa5b1" font-size="24">TypeScript / Playwright / API automation / CI</text>
+    <text x="64" y="427" fill="#c9d1d9" font-size="30">Manual + automation. AI-assisted QA.</text>
+    <text x="64" y="510" fill="#9aa5b1" font-size="24">Manual / API / Automation / Claude Code / Codex</text>
     <text x="960" y="510" fill="#edf1f5" font-size="24">mykola/qa</text>
   </g>
 </svg>

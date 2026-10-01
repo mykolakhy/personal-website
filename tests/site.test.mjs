@@ -12,6 +12,36 @@ import { websiteServer } from '../scripts/serve.mjs';
 const html = await readFile('index.html', 'utf8');
 const css = await readFile('styles.css', 'utf8');
 
+test('positioning covers manual, general and automation QA before the case studies', () => {
+  assert.match(html, /class="hero-lede">Manual, API, and automated testing\./);
+  assert.match(html, /Five years across manual, general, and automation QA/);
+  assert.match(html, /<strong>QA<\/strong><span>manual \+ automation<\/span>/);
+  const expertise = html.match(/<section id="expertise"([\s\S]*?)<\/section>/)?.[1];
+  assert.ok(expertise, 'expertise section exists');
+  assert.ok(html.indexOf('id="expertise"') < html.indexOf('id="work"'), 'capabilities precede automation case studies');
+  for (const phrase of ['Manual &amp; product QA', 'Exploratory, functional, smoke, and regression testing', 'release validation', 'API &amp; integration QA', 'Jest, Vitest, and Axios for automated API checks', 'UI automation with Playwright and TypeScript']) assert.ok(expertise.includes(phrase), phrase);
+  assert.match(html, /Across the QA<br \/> lifecycle\./);
+  assert.match(html, /class="role-scope">Manual, general, and automation QA\./);
+  assert.doesNotMatch(html, /From testing<br \/> to engineering|Hiring a Senior QA Engineer or SDET/);
+});
+
+test('AI positioning describes practical agent workflows without unverified expertise or results', async () => {
+  const workflow = html.match(/<section id="ai-workflow"([\s\S]*?)<\/section>/)?.[1];
+  assert.ok(workflow, 'AI workflow exists');
+  for (const phrase of ['Claude Code and Codex', 'repository analysis', 'test design', 'Understand the context', 'Build and improve', 'Check the result', 'verify behavior manually']) assert.ok(workflow.includes(phrase), phrase);
+  assert.match(html, /href="#ai-workflow">See the workflow/);
+  const description = html.match(/<meta name="description" content="([^"]+)"/)[1];
+  assert.match(description, /Manual, API, and automated testing/);
+  assert.match(description, /Claude Code and Codex/);
+  assert.doesNotMatch(workflow, /Copilot|Aider|LLM|RAG|\d+\s*%|\d+\s*[×x]/);
+  const social = await readFile('assets/social-preview.svg', 'utf8');
+  assert.match(social, /Manual \+ automation\. AI-assisted QA\./);
+  assert.match(social, /Claude Code \/ Codex/);
+  const image = await sharp('assets/social-preview.png').metadata();
+  assert.equal(image.width, 1200);
+  assert.equal(image.height, 630);
+});
+
 test('CI performance copy reflects many optimized jobs without a whole-pipeline claim', () => {
   assert.match(html, /<strong>Up to 4×<\/strong><span>faster execution for CI jobs<\/span>/);
   assert.doesNotMatch(html, /faster execution for one CI job|runtime of one regression CI job|The selected job ran|This is an improvement for one job/);

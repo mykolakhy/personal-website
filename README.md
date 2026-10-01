@@ -65,6 +65,11 @@ The `quality` and `browser-regression` checks are required before merging.
 
 - Edit copy in `index.html`; claim team-scale figures as a shared ecosystem, not
   individually authored tests. Keep experience and availability current.
+- Positioning spans manual, general and automation QA. Expertise precedes the
+  automation case studies; the AI workflow describes confirmed uses of Claude Code
+  and Codex without claiming AI-product/LLM expertise or measured AI speedups.
+- New manual or AI case studies need a real task, personal contribution and
+  supported outcome. Do not invent them to balance the existing automation cases.
 - CI performance improvements covered many jobs, with speedups of up to four
   times, not all jobs or the whole delivery pipeline. The 60-to-15-minute reduction
   is a concrete result, not a promise of the same speedup for every job. Overnight
