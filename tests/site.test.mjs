@@ -30,6 +30,7 @@ test('AI positioning describes practical agent workflows without unverified expe
   assert.ok(workflow, 'AI workflow exists');
   for (const phrase of ['Claude Code and Codex', 'repository analysis', 'test design', 'Understand the context', 'Build and improve', 'Check the result', 'verify behavior manually']) assert.ok(workflow.includes(phrase), phrase);
   assert.match(html, /href="#ai-workflow">See the workflow/);
+  assert.match(css, /html \{ scroll-behavior: auto;/, 'anchor navigation must not race with disclosure scrolling');
   const description = html.match(/<meta name="description" content="([^"]+)"/)[1];
   assert.match(description, /Manual, API, and automated testing/);
   assert.match(description, /Claude Code and Codex/);

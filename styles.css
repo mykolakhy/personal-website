@@ -23,7 +23,7 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+html { scroll-behavior: auto; scroll-padding-top: 88px; }
 body { margin: 0; background: var(--bg-page); color: var(--text-body); font-family: var(--font-sans); font-size: 16px; line-height: 1.65; }
 a { color: inherit; }
 a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; border-radius: 3px; }

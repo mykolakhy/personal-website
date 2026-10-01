@@ -10,6 +10,7 @@ test('all sections, resources and local navigation work without errors', async (
   page.on('response', (response) => { if (response.status() >= 400) errors.push(response.url() + ': ' + response.status()); });
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Mykola Khytra.');
+  expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior)).toBe('auto');
   await expect(page.getByText('Up to 4×', { exact: true })).toBeVisible();
   await expect(page.getByText('faster execution for CI jobs', { exact: true })).toBeVisible();
   await expect(page.locator('main section')).toHaveCount(9);
