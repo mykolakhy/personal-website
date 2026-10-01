@@ -44,7 +44,7 @@
         <div class="proof-grid" aria-label="Professional highlights">
           <div class="stat"><strong>5+</strong><span>years in QA</span></div>
           <div class="stat"><strong>11k+</strong><span>scenarios in a shared test ecosystem</span></div>
-          <div class="stat"><strong>4×</strong><span>faster execution for one CI job</span></div>
+          <div class="stat"><strong>4×</strong><span>faster execution for CI jobs</span></div>
           <div class="stat"><strong>TS</strong><span>TypeScript + Playwright</span></div>
         </div>
       </div>
@@ -74,7 +74,7 @@
         <div class="work-grid">
           <article class="card case-card">
             <div class="case-topline"><span class="case-number">01</span><span class="case-type">CI performance</span></div>
-            <h3>60 minutes → 15</h3><p>Parallel execution cut the runtime of one regression CI job by approximately four times.</p>
+            <h3>60 minutes → 15</h3><p>Parallel execution sped up regression CI jobs, including a reduction from approximately 60 minutes to 15.</p>
             <div class="tag-list"><span class="tag">TypeScript</span><span class="tag">CircleCI</span></div>
             <a class="case-link" href="#ci-case">Read the CI case <span aria-hidden="true">→</span></a>
           </article>
@@ -96,9 +96,9 @@
             <summary><span>01 / Faster regression feedback</span><span class="disclosure-mark" aria-hidden="true">+</span></summary>
             <div class="detail-body prose">
               <h3>Make the wait shorter, not the checks weaker.</h3>
-              <p><strong>Context.</strong> A regression CI job took approximately 60 minutes, slowing down the feedback cycle.</p>
-              <p><strong>My contribution.</strong> Reworked execution to use multiple concurrent workers and investigated failures through logs and test artifacts.</p>
-              <p><strong>Result.</strong> The selected job ran in approximately 15 minutes. This is an improvement for one job, not a claim that the entire delivery pipeline became four times faster.</p>
+              <p><strong>Context.</strong> Long-running regression CI jobs slowed down the feedback cycle.</p>
+              <p><strong>My contribution.</strong> Applied parallel execution across many CI jobs, using multiple concurrent workers, and investigated failures through logs and test artifacts.</p>
+              <p><strong>Result.</strong> Faster feedback across the optimized jobs, with a runtime reduction from approximately 60 minutes to 15. These improvements covered many CI jobs, not all jobs or the entire delivery pipeline.</p>
             </div>
           </details>
           <details id="api-case">

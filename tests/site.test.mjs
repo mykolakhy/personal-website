@@ -12,6 +12,16 @@ import { websiteServer } from '../scripts/serve.mjs';
 const html = await readFile('index.html', 'utf8');
 const css = await readFile('styles.css', 'utf8');
 
+test('CI performance copy reflects many optimized jobs without a whole-pipeline claim', () => {
+  assert.match(html, /<strong>4×<\/strong><span>faster execution for CI jobs<\/span>/);
+  assert.doesNotMatch(html, /faster execution for one CI job|runtime of one regression CI job|The selected job ran|This is an improvement for one job/);
+  const ciCase = html.match(/<details id="ci-case">([\s\S]*?)<\/details>/)?.[1];
+  assert.ok(ciCase, 'CI case study exists');
+  assert.match(ciCase, /Applied parallel execution across many CI jobs/);
+  assert.match(ciCase, /runtime reduction from approximately 60 minutes to 15/);
+  assert.match(ciCase, /many CI jobs, not all jobs or the entire delivery pipeline/);
+});
+
 test('downloadable CV preserves the owner-approved original PDF exactly', async () => {
   // Update this fingerprint only when the owner approves a new original CV.
   const cv = await readFile('assets/downloads/mykola-khytra-cv.pdf');

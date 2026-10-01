@@ -65,6 +65,9 @@ The `quality` and `browser-regression` checks are required before merging.
 
 - Edit copy in `index.html`; claim team-scale figures as a shared ecosystem, not
   individually authored tests. Keep experience and availability current.
+- CI performance improvements covered many jobs, not all jobs or the whole
+  delivery pipeline. The 60-to-15-minute reduction is a concrete result, not a
+  promise of the same speedup for every job.
 - Fonts and their SIL OFL licenses are in `assets/fonts/`.
 - Optimized portraits are metadata-free AVIF/WebP/JPEG files. The original PNG is
   deliberately ignored and never included in a build.
