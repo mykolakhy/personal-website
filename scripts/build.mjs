@@ -1,10 +1,34 @@
-import { copyFile, mkdir, readFile, writeFile, readdir } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { lstat, mkdir, open, realpath, writeFile, readdir } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { publicFiles, securityHeaders } from './public-files.mjs';
 
 const root = resolve(import.meta.dirname, '..');
+async function publicSourceBytes() {
+  const sourceRoot = await realpath(root);
+  const sources = new Map();
+  // Validate and snapshot all sources before touching output. Never reopen them
+  // while publishing: a source replaced by a symlink must not change the bytes.
+  for (const file of publicFiles) {
+    const source = resolve(sourceRoot, file);
+    let handle;
+    try {
+      if (!(await lstat(source)).isFile() || await realpath(source) !== source) {
+        throw new Error('Expected a regular file without symbolic links.');
+      }
+      handle = await open(source, constants.O_RDONLY | constants.O_NOFOLLOW);
+      if (!(await handle.stat()).isFile()) throw new Error('Expected a regular file.');
+      sources.set(file, await handle.readFile());
+    } catch (cause) {
+      throw new Error(`Unsafe public source: ${file}. Use a regular file without symbolic links.`, { cause });
+    } finally {
+      await handle?.close();
+    }
+  }
+  return sources;
+}
 export function productionURL(value) {
   if (!value) return null;
   const url = new URL(value);
@@ -16,7 +40,8 @@ export function productionURL(value) {
 }
 export async function build({ destination = resolve(root, 'dist'), siteURL = process.env.SITE_URL } = {}) {
   const base = productionURL(siteURL);
-  let html = await readFile(resolve(root, 'index.html'), 'utf8');
+  const sources = await publicSourceBytes();
+  let html = sources.get('index.html').toString('utf8');
   let scriptHash;
   if (base) {
     const canonical = base.href;
@@ -45,8 +70,7 @@ export async function build({ destination = resolve(root, 'dist'), siteURL = pro
   for (const file of publicFiles) {
     const target = resolve(destination, file);
     await mkdir(dirname(target), { recursive: true });
-    if (file === 'index.html') await writeFile(target, html);
-    else await copyFile(resolve(root, file), target);
+    await writeFile(target, file === 'index.html' ? html : sources.get(file));
   }
   await writeFile(resolve(destination, 'robots.txt'), base ? `User-agent: *\nAllow: /\nSitemap: ${new URL('sitemap.xml', base).href}\n` : 'User-agent: *\nDisallow: /\n');
   await writeFile(resolve(destination, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${base ? `<url><loc>${base.href.replaceAll('&', '&amp;').replaceAll('<', '&lt;')}</loc></url>` : ''}</urlset>\n`);

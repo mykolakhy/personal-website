@@ -26,6 +26,11 @@ npm run preview
 Only `dist/` is deployment output. A build without a production URL is a
 non-indexable preview, with no invented canonical URL.
 
+Before writing output, the build verifies every allowlisted source and snapshots
+its bytes. Sources must be regular files: symbolic links, including linked parent
+directories, are rejected. A missing or unsafe source leaves existing output
+unchanged; private data cannot be copied through a linked public resource.
+
 Before publishing, configure the real HTTPS address, including any subpath:
 
 ```sh
