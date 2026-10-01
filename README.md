@@ -63,6 +63,8 @@ availability and manual/automation/AI positioning accurate.
 English lives at `/`, Ukrainian at `/uk/`, Italian at `/it/` and German at `/de/`.
 The native header selector works without JavaScript. With JavaScript it remembers
 the selection locally and keeps the current section when switching languages.
+On mobile the menu opens directly below its button, over navigation. With
+JavaScript, covered links are temporarily non-interactive until the menu closes.
 Direct localized links take priority over the saved preference; `/?lang=en`
 explicitly selects English. No browser-language detection or tracking is used.
 

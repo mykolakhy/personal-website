@@ -40,6 +40,19 @@ if (switcher) {
     preserveSection();
     window.addEventListener('hashchange', preserveSection);
     for (const link of links) link.addEventListener('click', () => remember(link.dataset.language));
+    const navigationLinks = [...document.querySelectorAll('.site-nav a')];
+    const syncCoveredNavigation = () => {
+      const menu = switcher.open ? switcher.querySelector('.language-list').getBoundingClientRect() : null;
+      for (const link of navigationLinks) {
+        const rect = link.getBoundingClientRect();
+        // Preserve the visual overlay, but do not tab into partially covered
+        // links. Uncovered navigation stays usable; closing restores all links.
+        link.inert = Boolean(menu && rect.left < menu.right && rect.right > menu.left && rect.top < menu.bottom && rect.bottom > menu.top);
+      }
+    };
+    switcher.addEventListener('toggle', syncCoveredNavigation);
+    window.addEventListener('resize', syncCoveredNavigation);
+    syncCoveredNavigation();
     document.addEventListener('click', (event) => { if (!switcher.contains(event.target)) switcher.open = false; });
     switcher.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') {
