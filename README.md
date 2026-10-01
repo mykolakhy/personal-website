@@ -88,8 +88,8 @@ print, reduced motion and no-JavaScript behavior. Automated checks are not a ful
 WCAG certification or real-device audit.
 
 GitHub CI also audits dependencies. Both `quality` and `browser-regression` must
-pass before merging. Reports/traces are public and retained for seven days;
-test only public content.
+pass before merging. PRs use regular merge commits; squash and rebase are disabled.
+Reports/traces are public and retained for seven days; test only public content.
 
 ## Cloudflare Pages deployment
 

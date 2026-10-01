@@ -18,3 +18,28 @@ test('workflow uses immutable action references and read-only permissions', () =
   assert.doesNotMatch(workflow, /pull_request_target|secrets\./);
   assert.match(workflow, /persist-credentials: false/);
 });
+
+test('main allows regular merge commits without weakening repository protection', () => {
+  const ruleset = JSON.parse(readFileSync('.github/main-ruleset.json', 'utf8'));
+  assert.equal(ruleset.enforcement, 'active');
+  assert.deepEqual(ruleset.bypass_actors, []);
+  assert.deepEqual(ruleset.conditions.ref_name, { include: ['refs/heads/main'], exclude: [] });
+  for (const type of ['deletion', 'non_fast_forward']) {
+    assert.ok(ruleset.rules.some(rule => rule.type === type), type);
+  }
+  assert.ok(!ruleset.rules.some(rule => rule.type === 'required_linear_history'));
+  const pullRequest = ruleset.rules.find(rule => rule.type === 'pull_request');
+  assert.deepEqual(pullRequest.parameters.allowed_merge_methods, ['merge']);
+  assert.equal(pullRequest.parameters.required_review_thread_resolution, true);
+  const checks = ruleset.rules.find(rule => rule.type === 'required_status_checks');
+  assert.equal(checks.parameters.strict_required_status_checks_policy, true);
+  assert.equal(checks.parameters.do_not_enforce_on_create, false);
+  assert.deepEqual(checks.parameters.required_status_checks.map(check => check.context).sort(), ['browser-regression', 'quality']);
+
+  // The maintainer command must not restore the previous squash-only policy.
+  const configuration = readFileSync('scripts/configure-github.mjs', 'utf8');
+  assert.match(configuration, /allow_merge_commit: true/);
+  assert.match(configuration, /allow_squash_merge: false/);
+  assert.match(configuration, /allow_rebase_merge: false/);
+  assert.doesNotMatch(configuration, /squashOnly|allow_merge_commit: false|allow_squash_merge: true/);
+});
