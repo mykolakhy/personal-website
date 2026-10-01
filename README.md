@@ -65,9 +65,14 @@ The `quality` and `browser-regression` checks are required before merging.
 
 - Edit copy in `index.html`; claim team-scale figures as a shared ecosystem, not
   individually authored tests. Keep experience and availability current.
-- CI performance improvements covered many jobs, not all jobs or the whole
-  delivery pipeline. The 60-to-15-minute reduction is a concrete result, not a
-  promise of the same speedup for every job.
+- CI performance improvements covered many jobs, with speedups of up to four
+  times, not all jobs or the whole delivery pipeline. The 60-to-15-minute reduction
+  is a concrete result, not a promise of the same speedup for every job. Overnight
+  regression maintenance covered roughly 30 of around 70 jobs; this is not a count
+  of accelerated jobs.
+- The shared repository served roughly 10-15 QA engineers, automation engineers
+  and developers. TestRail-to-Testomat migration was independently completed by
+  the owner. Do not publish coverage percentages without defining the metric.
 - Fonts and their SIL OFL licenses are in `assets/fonts/`.
 - Optimized portraits are metadata-free AVIF/WebP/JPEG files. The original PNG is
   deliberately ignored and never included in a build.

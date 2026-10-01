@@ -13,13 +13,26 @@ const html = await readFile('index.html', 'utf8');
 const css = await readFile('styles.css', 'utf8');
 
 test('CI performance copy reflects many optimized jobs without a whole-pipeline claim', () => {
-  assert.match(html, /<strong>4×<\/strong><span>faster execution for CI jobs<\/span>/);
+  assert.match(html, /<strong>Up to 4×<\/strong><span>faster execution for CI jobs<\/span>/);
   assert.doesNotMatch(html, /faster execution for one CI job|runtime of one regression CI job|The selected job ran|This is an improvement for one job/);
   const ciCase = html.match(/<details id="ci-case">([\s\S]*?)<\/details>/)?.[1];
   assert.ok(ciCase, 'CI case study exists');
   assert.match(ciCase, /Applied parallel execution across many CI jobs/);
+  assert.match(ciCase, /Separately, maintained overnight regression workflows for roughly 30 of around 70 CI jobs/);
+  assert.match(ciCase, /Up to four times faster execution across optimized CI jobs/);
   assert.match(ciCase, /runtime reduction from approximately 60 minutes to 15/);
   assert.match(ciCase, /many CI jobs, not all jobs or the entire delivery pipeline/);
+});
+
+test('team claims distinguish shared scope from independent process ownership', () => {
+  const teamCase = html.match(/<details id="team-case">([\s\S]*?)<\/details>/)?.[1];
+  assert.ok(teamCase, 'team case study exists');
+  assert.match(teamCase, /roughly 10–15 QA engineers, automation engineers, and developers across teams/);
+  assert.doesNotMatch(teamCase, /10–15 QA automation engineers|led the TestRail-to-Testomat migration/);
+  assert.match(teamCase, /Independently migrated test case management from TestRail to Testomat/);
+  assert.match(teamCase, /shared ecosystem, not tests authored by me alone/);
+  assert.match(html, />Postman<\/span>/);
+  assert.match(html, />Swagger<\/span>/);
 });
 
 test('downloadable CV preserves the owner-approved original PDF exactly', async () => {

@@ -44,7 +44,7 @@
         <div class="proof-grid" aria-label="Professional highlights">
           <div class="stat"><strong>5+</strong><span>years in QA</span></div>
           <div class="stat"><strong>11k+</strong><span>scenarios in a shared test ecosystem</span></div>
-          <div class="stat"><strong>4×</strong><span>faster execution for CI jobs</span></div>
+          <div class="stat"><strong>Up to 4×</strong><span>faster execution for CI jobs</span></div>
           <div class="stat"><strong>TS</strong><span>TypeScript + Playwright</span></div>
         </div>
       </div>
@@ -74,7 +74,7 @@
         <div class="work-grid">
           <article class="card case-card">
             <div class="case-topline"><span class="case-number">01</span><span class="case-type">CI performance</span></div>
-            <h3>60 minutes → 15</h3><p>Parallel execution sped up regression CI jobs, including a reduction from approximately 60 minutes to 15.</p>
+            <h3>60 minutes → 15</h3><p>Parallel execution and multiple workers sped up many regression CI jobs by up to four times.</p>
             <div class="tag-list"><span class="tag">TypeScript</span><span class="tag">CircleCI</span></div>
             <a class="case-link" href="#ci-case">Read the CI case <span aria-hidden="true">→</span></a>
           </article>
@@ -96,9 +96,9 @@
             <summary><span>01 / Faster regression feedback</span><span class="disclosure-mark" aria-hidden="true">+</span></summary>
             <div class="detail-body prose">
               <h3>Make the wait shorter, not the checks weaker.</h3>
-              <p><strong>Context.</strong> Long-running regression CI jobs slowed down the feedback cycle.</p>
-              <p><strong>My contribution.</strong> Applied parallel execution across many CI jobs, using multiple concurrent workers, and investigated failures through logs and test artifacts.</p>
-              <p><strong>Result.</strong> Faster feedback across the optimized jobs, with a runtime reduction from approximately 60 minutes to 15. These improvements covered many CI jobs, not all jobs or the entire delivery pipeline.</p>
+              <p><strong>Context.</strong> Long-running regression CI jobs slowed down the feedback cycle, while overnight regression workflows needed ongoing maintenance.</p>
+              <p><strong>My contribution.</strong> Applied parallel execution across many CI jobs, using multiple concurrent workers and other optimizations. Separately, maintained overnight regression workflows for roughly 30 of around 70 CI jobs and investigated failures through logs and test artifacts.</p>
+              <p><strong>Result.</strong> Up to four times faster execution across optimized CI jobs, including a runtime reduction from approximately 60 minutes to 15. These improvements covered many CI jobs, not all jobs or the entire delivery pipeline.</p>
             </div>
           </details>
           <details id="api-case">
@@ -114,9 +114,10 @@
             <summary><span>03 / A test ecosystem people can maintain</span><span class="disclosure-mark" aria-hidden="true">+</span></summary>
             <div class="detail-body prose">
               <h3>Useful failures need shared ownership.</h3>
-              <p><strong>Context.</strong> A TypeScript ecosystem with 1,200+ specs and 11,000+ API and UI scenarios, shared by 10–15 QA automation engineers.</p>
-              <p><strong>My contribution.</strong> Maintained and refactored shared code, reviewed changes, investigated flaky tests, created a Datadog dashboard, and led the TestRail-to-Testomat migration with documentation and standards.</p>
-              <p><strong>Result.</strong> Better visibility and a more consistent way to maintain automation. The suite size describes the shared ecosystem, not tests authored by me alone.</p>
+              <p><strong>Context.</strong> A TypeScript ecosystem with 1,200+ specs and 11,000+ API and UI scenarios, shared by roughly 10–15 QA engineers, automation engineers, and developers across teams.</p>
+              <p><strong>My contribution.</strong> Maintained and refactored shared code, reviewed changes nearly every day, helped QA engineers and developers use the framework, and created a Datadog dashboard for execution monitoring.</p>
+              <p><strong>Process ownership.</strong> Independently migrated test case management from TestRail to Testomat and created documentation, guidelines, and automation standards.</p>
+              <p><strong>Result.</strong> Better execution visibility and a more consistent way to maintain automation and test case management. The suite size describes the shared ecosystem, not tests authored by me alone.</p>
             </div>
           </details>
         </div>
@@ -126,7 +127,7 @@
       <div class="container section-heading-row">
         <div><p class="eyebrow">Experience</p><h2 id="experience-title">From testing<br /> to engineering.</h2><a class="text-link experience-cv" href="./assets/downloads/mykola-khytra-cv.pdf" download>Full experience in my CV <span class="file-label">PDF</span></a></div>
         <ol class="experience-list">
-          <li><p class="mono-label">Jan 2024 – Jul 2026 · Shelf · Remote</p><h3>Senior Automation QA Engineer</h3><p>Shared automation, CI performance, API coverage, code reviews, and engineering standards.</p></li>
+          <li><p class="mono-label">Jan 2024 – Jul 2026 · Shelf · Remote</p><h3>Senior Automation QA Engineer</h3><p>Shared automation, CI optimization, API coverage, code reviews, and an independent TestRail-to-Testomat migration.</p></li>
           <li><p class="mono-label">Oct 2022 – Jan 2024 · Shelf · Lviv</p><h3>Hybrid QA Engineer</h3><p>Combined manual testing with TypeScript automation, Playwright, Jest, and CircleCI.</p></li>
           <li><p class="mono-label">Nov 2021 – Oct 2022 · Shelf · Lviv</p><h3>Junior QA Engineer</h3><p>Manual, API, and WebSocket testing, with test documentation and defect investigation.</p></li>
           <li><p class="mono-label">Apr 2021 – Oct 2021 · StarApps · Lviv</p><h3>Trainee QA Engineer</h3><p>Web and desktop testing for EV charging and energy-related products.</p></li>
@@ -148,8 +149,8 @@
         <div class="section-heading-row compact"><div><p class="eyebrow">Toolbox</p><h2 id="toolbox-title">Tools for the job.</h2></div><p class="section-intro">A practical stack for testing, delivery, and investigation.</p></div>
         <div class="toolbox-grid">
           <div class="tool-group"><h3 class="mono-label">Automation</h3><div class="tag-list"><span class="tag">Playwright</span><span class="tag">TypeScript</span><span class="tag">JavaScript</span><span class="tag">Jest</span><span class="tag">Vitest</span></div></div>
-          <div class="tool-group"><h3 class="mono-label">API + delivery</h3><div class="tag-list"><span class="tag">Axios</span><span class="tag">REST APIs</span><span class="tag">Git</span><span class="tag">GitHub Actions</span><span class="tag">CircleCI</span></div></div>
-          <div class="tool-group"><h3 class="mono-label">Engineering</h3><div class="tag-list"><span class="tag">Datadog</span><span class="tag">Testomat</span><span class="tag">Test strategy</span><span class="tag">AI-assisted workflows</span></div></div>
+          <div class="tool-group"><h3 class="mono-label">API + delivery</h3><div class="tag-list"><span class="tag">Axios</span><span class="tag">REST APIs</span><span class="tag">Postman</span><span class="tag">Swagger</span><span class="tag">Git</span><span class="tag">GitHub Actions</span><span class="tag">CircleCI</span></div></div>
+          <div class="tool-group"><h3 class="mono-label">Engineering</h3><div class="tag-list"><span class="tag">Datadog</span><span class="tag">TestRail</span><span class="tag">Testomat</span><span class="tag">Test strategy</span><span class="tag">AI-assisted workflows</span></div></div>
         </div>
       </div>
     </section>

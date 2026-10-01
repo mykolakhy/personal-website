@@ -10,6 +10,7 @@ test('all sections, resources and local navigation work without errors', async (
   page.on('response', (response) => { if (response.status() >= 400) errors.push(response.url() + ': ' + response.status()); });
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Mykola Khytra.');
+  await expect(page.getByText('Up to 4×', { exact: true })).toBeVisible();
   await expect(page.getByText('faster execution for CI jobs', { exact: true })).toBeVisible();
   await expect(page.locator('main section')).toHaveCount(8);
   const links = await page.locator('a[href^="#"]').evaluateAll((links) => links.map((link) => ({ href: link.getAttribute('href'), valid: Boolean(document.getElementById(link.hash.slice(1))) })));
@@ -17,11 +18,15 @@ test('all sections, resources and local navigation work without errors', async (
   await page.getByRole('link', { name: 'Read the CI case' }).click();
   await expect(page.locator('#ci-case')).toHaveAttribute('open', '');
   await expect(page.locator('#ci-case summary')).toBeFocused();
+  await expect(page.locator('#ci-case')).toContainText('Separately, maintained overnight regression workflows for roughly 30 of around 70 CI jobs');
+  await expect(page.locator('#ci-case')).toContainText('Up to four times faster execution across optimized CI jobs');
   await expect(page.locator('#ci-case')).toContainText('These improvements covered many CI jobs, not all jobs or the entire delivery pipeline.');
   await page.getByRole('link', { name: 'Read the API case' }).click();
   await expect(page.locator('#api-case')).toHaveAttribute('open', '');
   await page.getByRole('link', { name: 'Read the team case' }).click();
   await expect(page.locator('#team-case')).toHaveAttribute('open', '');
+  await expect(page.locator('#team-case')).toContainText('roughly 10–15 QA engineers, automation engineers, and developers across teams');
+  await expect(page.locator('#team-case')).toContainText('Independently migrated test case management from TestRail to Testomat');
   await page.getByRole('navigation').getByRole('link', { name: 'Contact' }).click();
   await expect(page).toHaveURL(/#contact$/);
   const downloads = await page.locator('a[download]').evaluateAll((links) => [...new Set(links.map((link) => link.href))]);
@@ -96,7 +101,7 @@ test('core content and native disclosures work with JavaScript disabled', async 
   const page = await context.newPage();
   await page.goto('http://127.0.0.1:4180/');
   await page.locator('#ci-case summary').click();
-  await expect(page.getByText('Faster feedback across the optimized jobs, with a runtime reduction from approximately 60 minutes to 15.', { exact: false })).toBeVisible();
+  await expect(page.getByText('Up to four times faster execution across optimized CI jobs, including a runtime reduction from approximately 60 minutes to 15.', { exact: false })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Download CV PDF', exact: true })).toBeVisible();
   await context.close();
 });
