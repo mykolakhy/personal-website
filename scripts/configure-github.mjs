@@ -17,9 +17,9 @@ if (before.full_name !== repository || !before.permissions?.admin) {
 }
 
 api(prefix, 'PATCH', {
-  allow_merge_commit: false,
+  allow_merge_commit: true,
   allow_rebase_merge: false,
-  allow_squash_merge: true,
+  allow_squash_merge: false,
   delete_branch_on_merge: true,
   allow_auto_merge: false,
 });
@@ -67,7 +67,11 @@ console.log(JSON.stringify({
   repository: after.full_name,
   private: after.private,
   defaultBranch: after.default_branch,
-  squashOnly: !after.allow_merge_commit && !after.allow_rebase_merge && after.allow_squash_merge,
+  mergeMethods: {
+    mergeCommit: after.allow_merge_commit,
+    squash: after.allow_squash_merge,
+    rebase: after.allow_rebase_merge,
+  },
   deleteBranchOnMerge: after.delete_branch_on_merge,
   actions: api(`${prefix}/actions/permissions`),
   allowedActions: api(`${prefix}/actions/permissions/selected-actions`),
