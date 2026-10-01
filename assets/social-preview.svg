@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0b0e12"/>
+  <path d="M64 64h1072M64 566h1072" stroke="#293039"/>
+  <rect x="64" y="116" width="12" height="12" fill="#c6f24e"/>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="94" y="128" fill="#9aa5b1" font-size="22" letter-spacing="2">KRAKÓW, POLAND</text>
+    <text x="64" y="265" fill="#edf1f5" font-size="88" font-weight="700">Mykola Khytra.</text>
+    <text x="64" y="337" fill="#c6f24e" font-size="38">Senior QA Engineer</text>
+    <text x="64" y="427" fill="#c9d1d9" font-size="30">Manual + automation. AI-assisted QA.</text>
+    <text x="64" y="510" fill="#9aa5b1" font-size="24">Manual / API / Automation / Claude Code / Codex</text>
+    <text x="960" y="510" fill="#edf1f5" font-size="24">mykola/qa</text>
+  </g>
+</svg>
