@@ -118,8 +118,8 @@ The `quality` and `browser-regression` checks are required before merging.
   explicit approval and copied without changes. It contains business email/profile
   links, but no phone, street address or private job-search notes.
 - When adding a resource, update `scripts/public-files.mjs` explicitly.
-- `qa-artifacts/`, `tmp/` and `output/` are local-only. An unrelated existing
-  Telegram workflow is ignored and has not been published.
+- `qa-artifacts/`, `tmp/` and `output/` are local-only. Generated reports and
+  temporary files are not part of source control or deployment output.
 
 ## Repository protection
 
@@ -142,5 +142,3 @@ The owner can reapply repo settings using `node scripts/configure-github.mjs
 Personal copy, photographs and branding remain the property of their respective
 owners. No open-source license is granted by publishing this repository.
 Third-party fonts retain their included licenses.
-
-See [the implementation milestones](docs/IMPLEMENTATION-PLAN.md).
