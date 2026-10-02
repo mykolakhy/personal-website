@@ -8,7 +8,13 @@ export const languages = [
   { code: 'de', label: 'Deutsch', short: 'DE', path: 'de/' },
 ];
 export const translationFiles = languages.slice(1).map(({ code }) => `locales/${code}.json`);
-export const generatedPages = languages.flatMap(({ path }) => [`${path}index.html`, `${path}404.html`]);
+export const pages = [
+  { key: 'home', path: '', source: 'index.html' },
+  { key: 'projects', path: 'projects/', source: 'pages/projects.html' },
+  { key: 'ai', path: 'ai/', source: 'pages/ai.html' },
+];
+export const pageTemplateFiles = pages.slice(1).map(page => page.source);
+export const generatedPages = languages.flatMap(({ path }) => [...pages.map(page => `${path}${page.path}index.html`), `${path}404.html`]);
 export const escapeHTML = (value) => value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 const interfaceEnglish = {
   ...githubEnglish,
@@ -16,6 +22,10 @@ const interfaceEnglish = {
   'language.label': 'Change language',
   'theme.light': 'Switch to light theme',
   'theme.dark': 'Switch to dark theme',
+  'meta.projectsTitle': 'Projects — Mykola Khytra',
+  'meta.projectsDescription': 'Public projects by Mykola Khytra: tools, source code, GitHub activity, and the tests behind this QA portfolio.',
+  'meta.aiTitle': 'AI-assisted QA — Mykola Khytra',
+  'meta.aiDescription': 'How Mykola Khytra uses Claude Code and Codex in QA, with a dated snapshot of profile token usage and monthly activity.',
   '404.title': 'Page not found — Mykola Khytra',
   '404.heading': 'Page not found',
   '404.body': "This page does not exist. Let's get you back to the portfolio.",
@@ -23,7 +33,11 @@ const interfaceEnglish = {
 };
 
 export function readCatalogs(template, sources) {
-  const keys = new Set([...template.matchAll(/data-i18n(?:-content|-alt|-aria-label)?="([\w.-]+)"/g)].map((m) => m[1]));
+  const templates = [template, ...pageTemplateFiles.map(file => {
+    if (!sources.has(file)) throw new Error(`Missing page template: ${file}`);
+    return sources.get(file).toString('utf8');
+  })].join('\n');
+  const keys = new Set([...templates.matchAll(/data-i18n(?:-content|-alt|-aria-label)?="([\w.-]+)"/g)].map((m) => m[1]));
   for (const key of Object.keys(interfaceEnglish)) keys.add(key);
   const catalogs = new Map([['en', interfaceEnglish]]);
   for (const { code } of languages.slice(1)) {
@@ -40,12 +54,12 @@ export function readCatalogs(template, sources) {
   return catalogs;
 }
 
-export function languageSwitcher(code, prefix, catalog = interfaceEnglish) {
+export function languageSwitcher(code, prefix, catalog = interfaceEnglish, pagePath = '') {
   const current = languages.find((language) => language.code === code);
   return `<details class="language-switcher">
         <summary><span class="sr-only">${escapeHTML(catalog['language.label'])}: </span><span lang="en">${current.short}</span><span class="sr-only" lang="${code}"> — ${current.label}</span><span aria-hidden="true">⌄</span></summary>
         <ul class="language-list">${languages.map((language) => `
-          <li><a href="${prefix}${language.path}${language.code === 'en' ? '?lang=en' : ''}" lang="${language.code}" hreflang="${language.code}" data-language="${language.code}"${code === language.code ? ' aria-current="page"' : ''}>${language.label}</a></li>`).join('')}
+          <li><a href="${prefix}${language.path}${pagePath}${language.code === 'en' ? '?lang=en' : ''}" lang="${language.code}" hreflang="${language.code}" data-language="${language.code}"${code === language.code ? ' aria-current="page"' : ''}>${language.label}</a></li>`).join('')}
         </ul>
       </details>`;
 }
@@ -59,10 +73,18 @@ export function themeToggle(catalog = interfaceEnglish) {
       </button>`;
 }
 
-export function renderPage(template, code, catalog, githubSnapshot = null, aiSnapshot = null) {
+export function renderPage(template, code, catalog = interfaceEnglish, githubSnapshot = null, aiSnapshot = null, { page: pageKey = 'home', sources } = {}) {
   const language = languages.find((language) => language.code === code);
   if (!language) throw new Error(`Unsupported language: ${code}`);
-  let html = template.replace('<html lang="en">', `<html lang="${code}">`);
+  const page = pages.find(page => page.key === pageKey);
+  if (!page) throw new Error(`Unsupported page: ${pageKey}`);
+  const prefix = '../'.repeat((language.path + page.path).split('/').filter(Boolean).length) || './';
+  let html = template;
+  if (pageKey !== 'home') {
+    if (!sources?.has(page.source)) throw new Error(`Missing page template: ${page.source}`);
+    html = html.replace(/(<main id="main" tabindex="-1">)[\s\S]*?(<\/main>)/, (_, start, end) => `${start}\n${sources.get(page.source).toString('utf8')}  ${end}`);
+  }
+  html = html.replace('<html lang="en">', `<html lang="${code}" data-page="${pageKey}">`);
   if (code !== 'en') {
     // Only controlled leaf text and explicit attributes are translated. Catalog
     // values are plain text, never trusted markup; newlines become line breaks.
@@ -73,13 +95,30 @@ export function renderPage(template, code, catalog, githubSnapshot = null, aiSna
           const key = element.match(new RegExp(`data-i18n-${name}="([\\w.-]+)"`))?.[1];
           return key ? ` ${name}="${escapeHTML(catalog[key])}"` : attribute;
         }));
-    html = html.replaceAll('./assets/', '../assets/').replaceAll('./styles.css', '../styles.css').replaceAll('./app.js', '../app.js').replaceAll('./theme.js', '../theme.js');
     if (code === 'uk') html = html.replace('space-grotesk-latin-wght-normal.woff2', 'ibm-plex-sans-cyrillic-600-normal.woff2');
   }
-  html = html.replace(/<!-- language-switcher -->[\s\S]*?<!-- \/language-switcher -->/, languageSwitcher(code, code === 'en' ? './' : '../', catalog));
-  html = html.replace(/<!-- theme-toggle -->[\s\S]*?<!-- \/theme-toggle -->/, themeToggle(catalog));
-  html = html.replace(/<!-- github-data -->[\s\S]*?<!-- \/github-data -->/, renderGithub(githubSnapshot, code, catalog));
-  html = html.replace(/<!-- ai-data -->[\s\S]*?<!-- \/ai-data -->/, renderAIStats(aiSnapshot, code, catalog));
+  html = html.replaceAll('./assets/', `${prefix}assets/`).replaceAll('./styles.css', `${prefix}styles.css`).replaceAll('./app.js', `${prefix}app.js`).replaceAll('./theme.js', `${prefix}theme.js`);
+  html = html.replace(/<a\b[^>]*\bdata-route="(home|projects|ai)"[^>]*>/g, (element, targetKey) => {
+    const target = pages.find(page => page.key === targetKey);
+    const original = element.match(/\bhref="([^"]*)"/)?.[1] ?? '';
+    const hash = original.includes('#') ? original.slice(original.indexOf('#')) : '';
+    const href = targetKey === pageKey && hash ? hash : `${prefix}${language.path}${target.path}${hash}`;
+    return element.replace(/\bhref="[^"]*"/, `href="${href}"`).replace(/\sdata-route="[^"]*"/, '');
+  });
+  if (pageKey !== 'home') {
+    const title = escapeHTML(catalog[`meta.${pageKey}Title`]);
+    const description = escapeHTML(catalog[`meta.${pageKey}Description`]);
+    html = html.replace(/<title[^>]*>[\s\S]*?<\/title>/, () => `<title>${title}</title>`)
+      .replace(/<meta\b[^>]*\bname="description"[^>]*>/, () => `<meta name="description" content="${description}" />`)
+      .replace(/<meta\b[^>]*\bproperty="og:title"[^>]*>/, () => `<meta property="og:title" content="${title}" />`)
+      .replace(/<meta\b[^>]*\bproperty="og:description"[^>]*>/, () => `<meta property="og:description" content="${description}" />`)
+      .replace('property="og:type" content="profile"', 'property="og:type" content="website"');
+    html = html.replace(new RegExp(`(<a[^>]*data-i18n="nav\\.${pageKey}"[^>]*)(>)`), '$1 aria-current="page"$2');
+  }
+  html = html.replace(/<!-- language-switcher -->[\s\S]*?<!-- \/language-switcher -->/, () => languageSwitcher(code, prefix, catalog, page.path));
+  html = html.replace(/<!-- theme-toggle -->[\s\S]*?<!-- \/theme-toggle -->/, () => themeToggle(catalog));
+  html = html.replace(/<!-- github-data -->[\s\S]*?<!-- \/github-data -->/, () => renderGithub(githubSnapshot, code, catalog));
+  html = html.replace(/<!-- ai-data -->[\s\S]*?<!-- \/ai-data -->/, () => renderAIStats(aiSnapshot, code, catalog));
   // Markers are authoring-only; deployment needs no catalogs or client renderer.
   return html.replace(/\sdata-i18n(?:-content|-alt|-aria-label)?="[\w.-]+"/g, '');
 }
@@ -101,7 +140,7 @@ export function renderNotFound(code, catalog, homeRoot = '/') {
   <title>${text('404.title')}</title>
   <link rel="icon" type="image/svg+xml" href="${root}assets/favicon.svg" />
   <script src="${root}theme.js?v=20261002-1"></script>
-  <link rel="stylesheet" href="${root}styles.css?v=20261002-6" />
+  <link rel="stylesheet" href="${root}styles.css?v=20261002-7" />
 </head>
 <body>
   <header class="site-header"><div class="container header-inner"><a class="wordmark" href="${home}">mykola<span>/</span>qa</a><div class="header-controls">${themeToggle(catalog)}</div></div></header>

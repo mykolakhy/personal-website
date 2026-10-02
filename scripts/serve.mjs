@@ -3,7 +3,7 @@ import { readFile, realpath, stat } from 'node:fs/promises';
 import { resolve, extname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { publicFiles, securityHeaders } from './public-files.mjs';
-import { languages, translationFiles, generatedPages, readCatalogs, renderPage, renderNotFound } from './i18n.mjs';
+import { languages, pages, pageTemplateFiles, translationFiles, generatedPages, readCatalogs, renderPage, renderNotFound } from './i18n.mjs';
 import { publicSourceBytes } from './build.mjs';
 import { githubStatsFiles, validateSnapshot } from './github-data.mjs';
 import { aiStatsFiles, validateAISnapshot } from './ai-data.mjs';
@@ -19,11 +19,12 @@ export function websiteServer({ directory = root, headers = securityHeaders() } 
     try {
       const url = new URL(request.url, 'http://127.0.0.1');
       path = decodeURIComponent(url.pathname).replace(/^\//, '');
-      if (languages.slice(1).some(({ code }) => path === code)) {
+      const routes = languages.flatMap(language => pages.map(page => language.path + page.path));
+      if (path && routes.some(route => path === route.slice(0, -1))) {
         response.writeHead(301, { ...headers, Location: `/${path}/${url.search}` });
         return response.end();
       }
-      if (languages.some(({ path: route }) => path === route)) path += 'index.html';
+      if (routes.includes(path)) path += 'index.html';
     } catch { return finish(400, 'Invalid URL'); }
     const found = allowed.has(path);
     if (!found) {
@@ -34,13 +35,15 @@ export function websiteServer({ directory = root, headers = securityHeaders() } 
       const file = resolve(directory, path);
       let bytes;
       if (directory === root && generatedPages.includes(path)) {
-        const sources = await publicSourceBytes(['index.html', ...translationFiles, ...githubStatsFiles, ...aiStatsFiles]);
+        const sources = await publicSourceBytes(['index.html', ...pageTemplateFiles, ...translationFiles, ...githubStatsFiles, ...aiStatsFiles]);
         const template = sources.get('index.html').toString('utf8');
-        const code = languages.find((language) => path === `${language.path}index.html` || path === `${language.path}404.html`).code;
+        const language = languages.find(language => path === `${language.path}404.html` || pages.some(page => path === `${language.path}${page.path}index.html`));
+        const code = language.code;
+        const page = pages.find(page => path === `${language.path}${page.path}index.html`);
         const catalog = readCatalogs(template, sources).get(code);
         const github = validateSnapshot(JSON.parse(sources.get(githubStatsFiles[0]).toString('utf8')));
         const ai = validateAISnapshot(JSON.parse(sources.get(aiStatsFiles[0]).toString('utf8')));
-        bytes = Buffer.from(path.endsWith('404.html') ? renderNotFound(code, catalog) : renderPage(template, code, catalog, github, ai));
+        bytes = Buffer.from(path.endsWith('404.html') ? renderNotFound(code, catalog) : renderPage(template, code, catalog, github, ai, { page: page.key, sources }));
       } else {
         if (await realpath(file) !== file) return finish(404, 'Not found');
         const info = await stat(file);

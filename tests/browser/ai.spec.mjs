@@ -11,7 +11,7 @@ for (const code of Object.keys(titles)) for (const theme of ['light', 'dark']) f
     page.on('pageerror', error => errors.push(error.message));
     page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
     page.on('request', request => { if (!request.url().startsWith('http://127.0.0.1:4180')) external.push(request.url()); });
-    await page.goto((code === 'en' ? '/' : `/${code}/`) + '#ai-activity');
+    await page.goto((code === 'en' ? '/ai/' : `/${code}/ai/`) + '#ai-activity');
     await expect(page.getByRole('heading', { name: titles[code], exact: true })).toBeVisible();
     for (const [key, value] of Object.entries(snapshot.summary)) await expect(page.locator(`[data-ai-metric="${key}"] data`)).toHaveAttribute('value', String(value));
     await expect(page.locator('.ai-month')).toHaveCount(12);
@@ -37,7 +37,7 @@ for (const code of Object.keys(titles)) for (const theme of ['light', 'dark']) f
 
 test('AI statistics work without JavaScript and disclosures are keyboard accessible', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 375, height: 900 } });
-  const page = await context.newPage(); await page.goto('http://127.0.0.1:4180/uk/#ai-activity');
+  const page = await context.newPage(); await page.goto('http://127.0.0.1:4180/uk/ai/#ai-activity');
   await expect(page.locator('.ai-month')).toHaveCount(12);
   await page.locator('.ai-stats-method summary').focus(); await page.keyboard.press('Enter');
   await expect(page.locator('.ai-stats-method')).toHaveAttribute('open', '');
@@ -46,7 +46,7 @@ test('AI statistics work without JavaScript and disclosures are keyboard accessi
 });
 
 test('AI statistics remain readable in forced colors and print', async ({ page }) => {
-  await page.goto('/#ai-activity'); await page.emulateMedia({ forcedColors: 'active' });
+  await page.goto('/ai/#ai-activity'); await page.emulateMedia({ forcedColors: 'active' });
   await expect(page.locator('.ai-stats-metrics')).toBeVisible(); await expect(page.locator('.ai-months')).toBeVisible();
   await page.emulateMedia({ forcedColors: 'none', media: 'print' });
   await expect(page.locator('.ai-stats-metrics')).toBeVisible(); await expect(page.locator('.ai-months')).toBeVisible();

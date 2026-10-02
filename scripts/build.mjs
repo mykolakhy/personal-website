@@ -4,12 +4,12 @@ import { resolve, dirname } from 'node:path';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { publicFiles, securityHeaders } from './public-files.mjs';
-import { languages, translationFiles, generatedPages, readCatalogs, renderPage, renderNotFound, escapeHTML } from './i18n.mjs';
+import { languages, pages, pageTemplateFiles, translationFiles, generatedPages, readCatalogs, renderPage, renderNotFound, escapeHTML } from './i18n.mjs';
 import { githubStatsFiles, validateSnapshot, latestSnapshot } from './github-data.mjs';
 import { aiStatsFiles, validateAISnapshot, latestAISnapshot } from './ai-data.mjs';
 
 const root = resolve(import.meta.dirname, '..');
-export async function publicSourceBytes(files = [...publicFiles, ...translationFiles, ...githubStatsFiles, ...aiStatsFiles]) {
+export async function publicSourceBytes(files = [...publicFiles, ...pageTemplateFiles, ...translationFiles, ...githubStatsFiles, ...aiStatsFiles]) {
   const sourceRoot = await realpath(root);
   const sources = new Map();
   // Validate and snapshot all sources before touching output. Never reopen them
@@ -50,29 +50,31 @@ export async function build({ destination = resolve(root, 'dist'), siteURL = pro
   const github = refreshGithub ? await latestSnapshot(savedGithub) : savedGithub;
   const savedAI = validateAISnapshot(JSON.parse(sources.get(aiStatsFiles[0]).toString('utf8')));
   const ai = refreshAI ? await latestAISnapshot(savedAI) : savedAI;
-  const pages = new Map();
+  const rendered = new Map();
   const scriptHashes = [];
   for (const { code, path } of languages) {
-    let html = renderPage(template, code, catalogs.get(code), github, ai);
-    if (base) {
-      const canonical = new URL(path, base).href;
-      const image = new URL('assets/social-preview.png', base).href;
-      const structured = JSON.stringify({
-        '@context': 'https://schema.org', '@type': 'ProfilePage', url: canonical, inLanguage: code,
-        mainEntity: { '@type': 'Person', name: 'Mykola Khytra', jobTitle: 'Senior QA Engineer',
-          url: canonical, image: new URL('assets/portrait-640.jpg', base).href,
-          sameAs: ['https://www.linkedin.com/in/mykola-khytra/', 'https://github.com/mykolakhy'] },
-      }).replaceAll('<', '\\u003c');
-      scriptHashes.push('sha256-' + createHash('sha256').update(structured).digest('base64'));
-      const alternates = [...languages, { code: 'x-default', path: '' }].map((language) =>
-        `  <link rel="alternate" hreflang="${language.code}" href="${escapeHTML(new URL(language.path, base).href)}" />`).join('\n');
-      html = html.replace(/(property="og:image" content=")[^"]+/, '$1' + escapeHTML(image))
-        .replace('</head>', `  <link rel="canonical" href="${escapeHTML(canonical)}" />\n${alternates}\n  <meta property="og:url" content="${escapeHTML(canonical)}" />\n  <script type="application/ld+json">${structured}</script>\n</head>`);
-    } else {
-      html = html.replace('</head>', '  <meta name="robots" content="noindex, nofollow" />\n</head>');
+    for (const page of pages) {
+      let html = renderPage(template, code, catalogs.get(code), github, ai, { page: page.key, sources });
+      if (base) {
+        const canonical = new URL(path + page.path, base).href;
+        const image = new URL('assets/social-preview.png', base).href;
+        const structured = JSON.stringify({
+          '@context': 'https://schema.org', '@type': page.key === 'home' ? 'ProfilePage' : 'WebPage', url: canonical, inLanguage: code,
+          mainEntity: { '@type': 'Person', name: 'Mykola Khytra', jobTitle: 'Senior QA Engineer',
+            url: canonical, image: new URL('assets/portrait-640.jpg', base).href,
+            sameAs: ['https://www.linkedin.com/in/mykola-khytra/', 'https://github.com/mykolakhy'] },
+        }).replaceAll('<', '\\u003c');
+        scriptHashes.push('sha256-' + createHash('sha256').update(structured).digest('base64'));
+        const alternates = [...languages, { code: 'x-default', path: '' }].map((language) =>
+          `  <link rel="alternate" hreflang="${language.code}" href="${escapeHTML(new URL(language.path + page.path, base).href)}" />`).join('\n');
+        html = html.replace(/(property="og:image" content=")[^"]+/, '$1' + escapeHTML(image))
+          .replace('</head>', `  <link rel="canonical" href="${escapeHTML(canonical)}" />\n${alternates}\n  <meta property="og:url" content="${escapeHTML(canonical)}" />\n  <script type="application/ld+json">${structured}</script>\n</head>`);
+      } else {
+        html = html.replace('</head>', '  <meta name="robots" content="noindex, nofollow" />\n</head>');
+      }
+      rendered.set(`${path}${page.path}index.html`, html);
     }
-    pages.set(`${path}index.html`, html);
-    pages.set(`${path}404.html`, renderNotFound(code, catalogs.get(code), base?.pathname ?? '/'));
+    rendered.set(`${path}404.html`, renderNotFound(code, catalogs.get(code), base?.pathname ?? '/'));
   }
   await mkdir(destination, { recursive: true });
   // Preserve unexpected user files, but refuse to label that directory publishable.
@@ -85,10 +87,10 @@ export async function build({ destination = resolve(root, 'dist'), siteURL = pro
   for (const file of new Set([...publicFiles, ...generatedPages])) {
     const target = resolve(destination, file);
     await mkdir(dirname(target), { recursive: true });
-    await writeFile(target, pages.get(file) ?? sources.get(file));
+    await writeFile(target, rendered.get(file) ?? sources.get(file));
   }
   await writeFile(resolve(destination, 'robots.txt'), base ? `User-agent: *\nAllow: /\nSitemap: ${new URL('sitemap.xml', base).href}\n` : 'User-agent: *\nDisallow: /\n');
-  await writeFile(resolve(destination, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${base ? languages.map(({ path }) => `<url><loc>${escapeHTML(new URL(path, base).href)}</loc></url>`).join('') : ''}</urlset>\n`);
+  await writeFile(resolve(destination, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${base ? languages.flatMap(({ path }) => pages.map(page => `<url><loc>${escapeHTML(new URL(path + page.path, base).href)}</loc></url>`)).join('') : ''}</urlset>\n`);
   const headers = { ...securityHeaders(scriptHashes), ...(!base ? { 'X-Robots-Tag': 'noindex, nofollow' } : {}) };
   await writeFile(resolve(destination, '_headers'), `/*\n${Object.entries(headers).map(([key, value]) => `  ${key}: ${value}`).join('\n')}\n  Cache-Control: public, max-age=0, must-revalidate\n`);
   return { destination, production: Boolean(base), files: approved.size };

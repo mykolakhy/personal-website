@@ -4,7 +4,7 @@ import { readFile, mkdtemp, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
-import { languages, translationFiles, readCatalogs, renderPage } from '../scripts/i18n.mjs';
+import { languages, pages, pageTemplateFiles, translationFiles, readCatalogs, renderPage } from '../scripts/i18n.mjs';
 import { publicSourceBytes, build } from '../scripts/build.mjs';
 import { websiteServer } from '../scripts/serve.mjs';
 
@@ -13,7 +13,7 @@ const template = sources.get('index.html').toString('utf8');
 const catalogs = readCatalogs(template, sources);
 
 test('every catalog has complete plain-text translations and rejects invalid entries', () => {
-  const keys = [...template.matchAll(/data-i18n(?:-content|-alt|-aria-label)?="([\w.-]+)"/g)].map(m => m[1]);
+  const keys = [...[template, ...pageTemplateFiles.map(file => sources.get(file).toString('utf8'))].join('\n').matchAll(/data-i18n(?:-content|-alt|-aria-label)?="([\w.-]+)"/g)].map(m => m[1]);
   assert.ok(new Set(keys).size >= 130);
   for (const { code } of languages.slice(1)) {
     const catalog = catalogs.get(code);
@@ -38,8 +38,8 @@ test('all static pages translate text and attributes while preserving links, con
   for (const { code, path } of languages) {
     const catalog = catalogs.get(code);
     const html = renderPage(template, code, catalog);
-    assert.match(html, new RegExp(`<html lang="${code}">`));
-    assert.equal([...html.matchAll(/<section\b/g)].length, 11);
+    assert.match(html, new RegExp(`<html lang="${code}" data-page="home">`));
+    assert.equal([...html.matchAll(/<section\b/g)].length, 7);
     assert.deepEqual([...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]), englishIDs);
     assert.match(html, /<h1 id="hero-title">Mykola Khytra\.<\/h1>/);
     assert.match(html, /data-language="en"/);
@@ -102,7 +102,7 @@ test('production gives each language canonical metadata, matching CSP hashes, a 
     assert.ok(notFound.includes('src="/subpath/theme.js?v='));
     assert.ok(notFound.includes(catalogs.get(code)['theme.dark']));
   }
-  assert.equal([...sitemap.matchAll(/<loc>/g)].length, 4);
+  assert.equal([...sitemap.matchAll(/<loc>/g)].length, 12);
   assert.doesNotMatch((await readdir(destination, { recursive: true })).join('\n'), /locales|\.json$/);
   await build({ destination, siteURL: null });
   for (const { path } of languages) {
@@ -120,7 +120,7 @@ test('development serves all language routes and localized 404s without exposing
   for (const { code, path } of languages) {
     const response = await fetch(base + '/' + path);
     assert.equal(response.status, 200);
-    assert.match(await response.text(), new RegExp(`<html lang="${code}">`));
+    assert.match(await response.text(), new RegExp(`<html lang="${code}" data-page="home">`));
     const bad = await fetch(base + '/' + path + 'missing/nested-page');
     assert.equal(bad.status, 404);
     assert.match(await bad.text(), new RegExp(`<html lang="${code}">`));

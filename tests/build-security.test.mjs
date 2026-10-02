@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { publicFiles } from '../scripts/public-files.mjs';
-import { translationFiles } from '../scripts/i18n.mjs';
+import { translationFiles, pageTemplateFiles } from '../scripts/i18n.mjs';
 import { githubStatsFiles } from '../scripts/github-data.mjs';
 import { aiStatsFiles } from '../scripts/ai-data.mjs';
 
@@ -26,7 +26,7 @@ async function fixture(context, { linkedFile, linkedDirectory, missingFile, dire
     await mkdir(dirname(target), { recursive: true });
     await symlink(privateDirectory, target, 'dir');
   }
-  for (const file of ['scripts/build.mjs', 'scripts/public-files.mjs', 'scripts/i18n.mjs', 'scripts/github-data.mjs', 'scripts/github-section.mjs', 'scripts/ai-data.mjs', 'scripts/ai-section.mjs', ...publicFiles, ...translationFiles, ...githubStatsFiles, ...aiStatsFiles]) {
+  for (const file of ['scripts/build.mjs', 'scripts/public-files.mjs', 'scripts/i18n.mjs', 'scripts/github-data.mjs', 'scripts/github-section.mjs', 'scripts/ai-data.mjs', 'scripts/ai-section.mjs', ...publicFiles, ...pageTemplateFiles, ...translationFiles, ...githubStatsFiles, ...aiStatsFiles]) {
     if (file === missingFile) continue;
     const target = resolve(source, file);
     await mkdir(dirname(target), { recursive: true });
@@ -59,6 +59,8 @@ for (const [name, options] of [
   ['translation directory linked outside the source tree', { linkedDirectory: 'locales' }],
   ['GitHub snapshot linked to private data', { linkedFile: 'data/github-stats.json' }],
   ['GitHub snapshot directory linked outside the source tree', { linkedDirectory: 'data' }],
+  ['secondary page template linked to private data', { linkedFile: 'pages/ai.html' }],
+  ['secondary page directory linked outside the source tree', { linkedDirectory: 'pages' }],
   ['AI snapshot linked to private data', { linkedFile: 'data/ai-stats.json' }],
 ]) {
   test(`build rejects ${name} before creating output`, async (context) => {

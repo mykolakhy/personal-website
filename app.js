@@ -30,6 +30,17 @@ if (switcher) {
   } else {
     // A direct localized URL or an explicit English choice wins over memory.
     remember(language);
+    // Old one-page links keep reaching the relocated content. Without JS the
+    // home-page teaser anchors still offer links to the complete pages.
+    if (document.documentElement.dataset.page === 'home') {
+      const moved = { '#github': 'projects/#github', '#ai-workflow': 'ai/#ai-workflow', '#ai-activity': 'ai/#ai-activity' }[location.hash];
+      if (moved) {
+        const destination = new URL(moved, location.href);
+        destination.search = location.search;
+        location.replace(destination.href);
+      }
+      if (location.hash === '#writing') history.replaceState(null, '', location.pathname + location.search + '#expertise');
+    }
     const preserveSection = () => {
       for (const link of links) {
         const destination = new URL(link.href);

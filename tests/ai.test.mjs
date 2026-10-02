@@ -116,7 +116,7 @@ test('all four languages render exact accessible figures, twelve cards and safe 
   const sources = await publicSourceBytes(); const template = sources.get('index.html').toString('utf8');
   const catalogs = readCatalogs(template, sources);
   for (const code of ['en', 'uk', 'it', 'de']) {
-    const html = renderPage(template, code, catalogs.get(code), null, saved);
+    const html = renderPage(template, code, catalogs.get(code), null, saved, { page: 'ai', sources });
     const section = html.match(/<section id="ai-activity"([\s\S]*?)<\/section>/)[1];
     assert.equal([...section.matchAll(/data-ai-metric=/g)].length, 5);
     assert.equal([...section.matchAll(/data-ai-month=/g)].length, 12);

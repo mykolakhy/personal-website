@@ -45,7 +45,8 @@ symlinked sources and unexpected output files.
 
 | Change | File or directory |
 | --- | --- |
-| Text, sections and links | [index.html](index.html) |
+| Homepage, shared header/footer and links | [index.html](index.html) |
+| Projects and AI page content | [pages/projects.html](pages/projects.html), [pages/ai.html](pages/ai.html) |
 | Ukrainian, Italian and German translations | [locales/](locales/) |
 | Layout, colors and responsive styles | [styles.css](styles.css) |
 | Case-study links and language preference | [app.js](app.js) |
@@ -61,22 +62,42 @@ Keep claims evidence-based: distinguish personal contributions from team-scale
 figures and CI-job improvements from whole-pipeline results. Keep experience,
 availability and manual/automation/AI positioning accurate.
 
-## Languages
+## Pages and languages
+
+The homepage has seven sections: introduction, about, expertise, selected work,
+experience, two compact page previews, and contact. Professional case disclosures
+stay on the homepage. The projects page (`/projects/`) puts public repositories
+before GitHub activity and site-verification details. The AI page (`/ai/`) contains
+the practical workflow followed by profile statistics. There is no placeholder
+notes page; overlapping principles are covered by expertise, cases and the workflow.
+
+All three pages share the same header/footer and produce static HTML in four
+languages: twelve indexable pages, plus localized 404s. For example,
+`/uk/projects/` and `/uk/ai/` are the Ukrainian detail pages. Navigation, assets,
+downloads and back links are relative to their generated location, including
+production sites hosted under a subpath. Each page has its own title, description,
+canonical URL and same-page language alternatives.
+
+Old homepage links to `#github`, `#ai-workflow` and `#ai-activity` redirect to the
+relocated content with JavaScript, preserving the language and query. Without
+JavaScript they land on homepage previews with links to the full pages. The old
+`#writing` link resolves to expertise with JavaScript; case-study URLs are unchanged.
 
 English lives at `/`, Ukrainian at `/uk/`, Italian at `/it/` and German at `/de/`.
 The native header selector works without JavaScript. With JavaScript it remembers
-the selection locally and keeps the current section when switching languages.
+the selection locally and keeps the current page and section when switching languages.
 On mobile the menu opens directly below its button, over navigation. With
 JavaScript, covered links are temporarily non-interactive until the menu closes.
 Direct localized links take priority over the saved preference; `/?lang=en`
 explicitly selects English. No browser-language detection or tracking is used.
 
-English copy is authored in `index.html`, `scripts/github-section.mjs` and `scripts/ai-section.mjs`; `data-i18n` markers map to plain-text
+English copy is authored in `index.html`, `pages/`, `scripts/github-section.mjs` and `scripts/ai-section.mjs`; `data-i18n` markers map to plain-text
 keys in the three JSON catalogs. Update all catalogs when changing marked copy.
 Use `\n` for heading line breaks, not HTML. Builds reject missing, empty or extra
 translations before writing output, and do not publish the catalogs. Dev renders
 localized pages directly; builds produce static HTML, localized 404s, canonical
-URLs, language alternatives and a four-page sitemap. The CV stays in English.
+URLs, language alternatives and a twelve-page sitemap. Page fragments and catalogs
+are build inputs, not public website routes. The CV stays in English.
 
 ## Appearance
 
