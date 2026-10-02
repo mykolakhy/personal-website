@@ -5,9 +5,10 @@ import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { publicFiles, securityHeaders } from './public-files.mjs';
 import { languages, translationFiles, generatedPages, readCatalogs, renderPage, renderNotFound, escapeHTML } from './i18n.mjs';
+import { githubStatsFiles, validateSnapshot, latestSnapshot } from './github-data.mjs';
 
 const root = resolve(import.meta.dirname, '..');
-export async function publicSourceBytes(files = [...publicFiles, ...translationFiles]) {
+export async function publicSourceBytes(files = [...publicFiles, ...translationFiles, ...githubStatsFiles]) {
   const sourceRoot = await realpath(root);
   const sources = new Map();
   // Validate and snapshot all sources before touching output. Never reopen them
@@ -39,15 +40,17 @@ export function productionURL(value) {
   url.pathname = url.pathname.replace(/\/?$/, '/');
   return url;
 }
-export async function build({ destination = resolve(root, 'dist'), siteURL = process.env.SITE_URL } = {}) {
+export async function build({ destination = resolve(root, 'dist'), siteURL = process.env.SITE_URL, refreshGithub = false } = {}) {
   const base = productionURL(siteURL);
   const sources = await publicSourceBytes();
   const template = sources.get('index.html').toString('utf8');
   const catalogs = readCatalogs(template, sources);
+  const savedGithub = validateSnapshot(JSON.parse(sources.get(githubStatsFiles[0]).toString('utf8')));
+  const github = refreshGithub ? await latestSnapshot(savedGithub) : savedGithub;
   const pages = new Map();
   const scriptHashes = [];
   for (const { code, path } of languages) {
-    let html = renderPage(template, code, catalogs.get(code));
+    let html = renderPage(template, code, catalogs.get(code), github);
     if (base) {
       const canonical = new URL(path, base).href;
       const image = new URL('assets/social-preview.png', base).href;

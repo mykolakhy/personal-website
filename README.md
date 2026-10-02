@@ -50,6 +50,7 @@ symlinked sources and unexpected output files.
 | Layout, colors and responsive styles | [styles.css](styles.css) |
 | Case-study links and language preference | [app.js](app.js) |
 | Theme preference and switching | [theme.js](theme.js) |
+| Public GitHub data and its collection/rendering | [data/github-stats.json](data/github-stats.json), [scripts/github-data.mjs](scripts/github-data.mjs), [scripts/github-section.mjs](scripts/github-section.mjs) |
 | Images, fonts and downloadable CV | [assets/](assets/) |
 | Deployment allowlist and security headers | [scripts/public-files.mjs](scripts/public-files.mjs) |
 | Build and local server | [scripts/](scripts/) |
@@ -69,7 +70,7 @@ JavaScript, covered links are temporarily non-interactive until the menu closes.
 Direct localized links take priority over the saved preference; `/?lang=en`
 explicitly selects English. No browser-language detection or tracking is used.
 
-English copy is authored in `index.html`; `data-i18n` markers map to plain-text
+English copy is authored in `index.html` and `scripts/github-section.mjs`; `data-i18n` markers map to plain-text
 keys in the three JSON catalogs. Update all catalogs when changing marked copy.
 Use `\n` for heading line breaks, not HTML. Builds reject missing, empty or extra
 translations before writing output, and do not publish the catalogs. Dev renders
@@ -101,6 +102,58 @@ Retain the font licenses in
 `assets/fonts/`. Replacing the CV requires owner approval and updating its
 fingerprint in [tests/site.test.mjs](tests/site.test.mjs). Add new public resources
 to `scripts/public-files.mjs`.
+
+## GitHub activity
+
+The GitHub section is static HTML in all four languages and both themes. Visitors
+do not call GitHub APIs; no token, raw snapshot or private repository metadata is
+deployed. The existing `connect-src 'none'` policy is unchanged.
+
+- Calendar: dates, counts and intensity levels visible on the GitHub profile
+  **without signing in**, including anonymous private contributions already shared
+  there. GitHub aligns its calendar to weeks (365–371 dates), so compare totals
+  over the displayed range, not a separately calculated 365-day window.
+- PR/review metrics: public contributions in currently public repositories in that
+  range, collected separately. They are not a breakdown of the calendar total.
+- Projects: an explicit allowlist (`personal-website`, `PixelKit`, `they-are-frogs`);
+  private repositories are omitted. Copy is curated, not imported from API HTML.
+- Monthly activity: twelve compact cards for the twelve most recent calendar
+  months. The current month is marked partial; bars compare contribution volume.
+  This view has its own calendar-month range, not the rolling-year calendar total.
+- CI: the last completed push-triggered `ci.yml` run on `main`, with its date,
+  commit and source link. This is not a live health/uptime indicator.
+
+The calendar uses GitHub's HTML endpoint, which is not a versioned API. The
+collector checks every date, tooltip, count and intensity against the displayed
+total; an upstream format change fails the refresh instead of publishing partial
+data. Private names, code, messages, paths and review bodies are never requested.
+Manual QA and work outside GitHub are not captured by these metrics.
+
+The committed `data/github-stats.json` is a validated offline baseline used by dev,
+tests and previews. Update it using an authorized local GitHub CLI session:
+
+```sh
+npm run refresh:github -- --local
+npm test
+npm run build
+```
+
+`GitHub activity refresh` runs daily at 05:23 UTC (schedules may be delayed) or
+manually on `main`. It validates/collects data, updates the `github-activity`
+release asset, then requests a new Cloudflare build. It does not commit to `main`
+or bypass branch protection. Only the publishing job has repository `contents:
+write`; the standard repository-scoped `GITHUB_TOKEN` is not a personal token.
+The data release is not a software version and is not marked as the latest release.
+
+Daily deployment requires a Cloudflare Pages deploy hook restricted to `main`,
+stored as the repository Actions secret **`CLOUDFLARE_DEPLOY_HOOK`**. Treat that URL
+as a credential; do not commit it, log it or paste it into reports. No broad
+Cloudflare API token is required. A missing hook fails deployment explicitly.
+
+On Cloudflare production builds, `build:pages` reads the newer validated public
+release asset without credentials. If it is unavailable or invalid, it retains the
+dated baseline. Local/CI/preview builds stay offline and deterministic. The site
+shows the snapshot timestamp; it is refreshed daily, not in real time.
 
 ## Verification
 

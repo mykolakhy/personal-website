@@ -63,3 +63,15 @@ if (switcher) {
   }
 }
 openLinkedCase();
+
+// On narrow screens show the newest activity first. The native scroll area
+// remains usable with touch/keyboard and still works without JavaScript.
+const calendar = document.querySelector('.calendar-scroll');
+if (calendar) {
+  calendar.scrollLeft = calendar.scrollWidth;
+  calendar.addEventListener('keydown', event => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    calendar.scrollLeft += event.key === 'ArrowLeft' ? -48 : 48;
+  });
+}
