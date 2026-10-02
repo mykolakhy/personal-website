@@ -45,7 +45,13 @@ test('all static pages translate text and attributes while preserving links, con
     assert.match(html, /data-language="en"/);
     assert.match(html, new RegExp(`data-language="${code}" aria-current="page"`));
     assert.doesNotMatch(html, /data-i18n|undefined|<!-- language-switcher/);
+    assert.doesNotMatch(html, /<!-- theme-toggle/);
+    assert.match(html, /class="theme-toggle" type="button" hidden aria-label="[^"]+"/);
+    assert.ok(html.includes(catalog['theme.light']));
+    assert.ok(html.includes(catalog['theme.dark']));
     const prefix = path ? '../' : './';
+    assert.ok(html.includes(`src="${prefix}theme.js?v=`));
+    assert.ok(html.indexOf('src="' + prefix + 'theme.js') < html.indexOf('rel="stylesheet"'), 'saved theme applies before styling');
     for (const other of languages) assert.ok(html.includes(`href="${prefix}${other.path}${other.code === 'en' ? '?lang=en' : ''}"`));
     assert.ok(html.includes(`href="${prefix}assets/downloads/mykola-khytra-cv.pdf"`));
     if (code !== 'en') {
@@ -63,10 +69,11 @@ test('all static pages translate text and attributes while preserving links, con
 
 test('translation content cannot inject HTML, scripts or attributes', () => {
   const attack = '\"><script>alert(1)</script>&';
-  const html = renderPage(template, 'uk', { ...catalogs.get('uk'), 'hero.tagline': attack, portraitAlt: attack, 'meta.description': attack });
+  const html = renderPage(template, 'uk', { ...catalogs.get('uk'), 'hero.tagline': attack, portraitAlt: attack, 'meta.description': attack, 'theme.light': attack });
   assert.ok(html.includes('&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;&amp;'));
   assert.doesNotMatch(html, /<script>alert/);
   assert.match(html, /alt="&quot;&gt;&lt;script&gt;/);
+  assert.match(html, /data-label-light="&quot;&gt;&lt;script&gt;/);
 });
 
 test('production gives each language canonical metadata, matching CSP hashes, a sitemap and localized 404s', async context => {
@@ -91,7 +98,9 @@ test('production gives each language canonical metadata, matching CSP hashes, a 
     const notFound = await readFile(resolve(destination, path, '404.html'), 'utf8');
     assert.ok(notFound.includes(`<html lang="${code}">`));
     assert.ok(notFound.includes(`href="/subpath/${path}"`));
-    assert.ok(notFound.includes('href="/subpath/styles.css"'));
+    assert.ok(notFound.includes('href="/subpath/styles.css?v='));
+    assert.ok(notFound.includes('src="/subpath/theme.js?v='));
+    assert.ok(notFound.includes(catalogs.get(code)['theme.dark']));
   }
   assert.equal([...sitemap.matchAll(/<loc>/g)].length, 4);
   assert.doesNotMatch((await readdir(destination, { recursive: true })).join('\n'), /locales|\.json$/);

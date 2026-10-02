@@ -12,6 +12,7 @@ for (const locale of locales) {
   for (const width of [375, 1440]) {
     test(`${locale.code}: language button restores its default style after closing at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
+      await page.emulateMedia({ colorScheme: 'dark' });
       await page.goto(locale.path);
       const button = page.locator('.language-switcher summary');
       const menu = page.locator('.language-switcher');

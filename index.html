@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="color-scheme" content="dark light" />
-  <meta name="theme-color" content="#0b0e12" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#f7f8f2" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0b0e12" media="(prefers-color-scheme: dark)" />
   <meta data-i18n-content="meta.description" name="description" content="Mykola Khytra, Senior QA Engineer in Kraków. Manual, API, and automated testing with practical AI-assisted workflows using Claude Code and Codex." />
   <meta property="og:type" content="profile" />
   <meta data-i18n-content="meta.title" property="og:title" content="Mykola Khytra — Senior QA Engineer" />
@@ -17,7 +18,8 @@
   <title data-i18n="meta.title">Mykola Khytra — Senior QA Engineer</title>
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
   <link rel="preload" href="./assets/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="./styles.css?v=20261002-2" />
+  <script src="./theme.js?v=20261002-1"></script>
+  <link rel="stylesheet" href="./styles.css?v=20261002-3" />
   <!-- Production metadata is added by the build when a real URL is configured. -->
 </head>
 <body>
@@ -27,8 +29,12 @@
       <a class="wordmark" href="#top" data-i18n-aria-label="homeLabel" aria-label="Mykola Khytra home">mykola<span>/</span>qa</a>
       <nav class="site-nav" data-i18n-aria-label="navLabel" aria-label="Primary navigation"><a data-i18n="nav.work" href="#work">Work</a><a data-i18n="nav.topics" href="#writing">Topics</a><a data-i18n="contact.label" href="#contact">Contact</a></nav>
       <a class="header-status" href="#contact"><span class="status-dot" aria-hidden="true"></span><span data-i18n="status">Open to senior QA roles</span></a>
-      <!-- language-switcher -->
-      <!-- /language-switcher -->
+      <div class="header-controls">
+        <!-- theme-toggle -->
+        <!-- /theme-toggle -->
+        <!-- language-switcher -->
+        <!-- /language-switcher -->
+      </div>
     </div>
   </header>
   <main id="main" tabindex="-1">

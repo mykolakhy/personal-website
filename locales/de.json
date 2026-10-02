@@ -1,5 +1,7 @@
 {
   "language.label": "Sprache ändern",
+  "theme.light": "Zum hellen Design wechseln",
+  "theme.dark": "Zum dunklen Design wechseln",
   "meta.title": "Mykola Khytra — Senior QA Engineer",
   "meta.description": "Mykola Khytra, Senior QA Engineer in Krakau. Manuelle Tests, API-Tests und Testautomatisierung mit praxisnahen KI-gestützten Workflows in Claude Code und Codex.",
   "meta.social": "Manuelle QA, Generalist-QA und Testautomatisierung. Produktrisiken, Release-Prüfung und praktische KI-gestützte Workflows mit Claude Code und Codex.",
