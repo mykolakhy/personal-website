@@ -105,8 +105,13 @@ responsive layouts at 320–1440 px, accessibility, keyboard navigation, downloa
 print, reduced motion and no-JavaScript behavior. Automated checks are not a full
 WCAG certification or real-device audit.
 
-GitHub CI also audits dependencies. Both `quality` and `browser-regression` must
-pass before merging. PRs use regular merge commits; squash and rebase are disabled.
+GitHub CI runs on PRs targeting `main` and their updates, on pushes to `main`,
+and manually through **Actions → Website CI → Run workflow**. Pushes to working
+branches alone do not trigger CI; open a PR or run it manually to check a branch.
+The manual-run button becomes available once this workflow is on `main`.
+Every run includes the full browser suite and a dependency audit. Both `quality`
+and `browser-regression` must pass before merging. PRs use regular merge commits;
+squash and rebase are disabled.
 Reports/traces are public and retained for seven days; test only public content.
 
 ## Cloudflare Pages deployment
