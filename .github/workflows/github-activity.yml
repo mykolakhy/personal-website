@@ -1,0 +1,58 @@
+name: GitHub activity refresh
+
+on:
+  schedule:
+    - cron: '23 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-activity-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    if: github.repository == 'mykolakhy/personal-website' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # Update only this repository's public data release, never main.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - name: Collect public data
+        run: npm run refresh:github
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Publish validated snapshot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view github-activity --repo mykolakhy/personal-website > /dev/null 2>&1; then
+            gh release create github-activity --repo mykolakhy/personal-website --target main --title "Public GitHub activity data" --notes "Generated public profile calendar and public PR/review metrics. No private repository details. Not a software release." --latest=false
+          fi
+          gh release upload github-activity data/github-stats.json --repo mykolakhy/personal-website --clobber
+
+  deploy:
+    needs: refresh
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+      - name: Rebuild the production branch
+        run: node scripts/deploy-github-update.mjs
+        env:
+          CLOUDFLARE_DEPLOY_HOOK: ${{ secrets.CLOUDFLARE_DEPLOY_HOOK }}

@@ -1,3 +1,5 @@
+import { githubEnglish, renderGithub } from './github-section.mjs';
+
 export const languages = [
   { code: 'en', label: 'English', short: 'EN', path: '' },
   { code: 'uk', label: 'Українська', short: 'UA', path: 'uk/' },
@@ -8,6 +10,7 @@ export const translationFiles = languages.slice(1).map(({ code }) => `locales/${
 export const generatedPages = languages.flatMap(({ path }) => [`${path}index.html`, `${path}404.html`]);
 export const escapeHTML = (value) => value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 const interfaceEnglish = {
+  ...githubEnglish,
   'language.label': 'Change language',
   'theme.light': 'Switch to light theme',
   'theme.dark': 'Switch to dark theme',
@@ -54,7 +57,7 @@ export function themeToggle(catalog = interfaceEnglish) {
       </button>`;
 }
 
-export function renderPage(template, code, catalog) {
+export function renderPage(template, code, catalog, githubSnapshot = null) {
   const language = languages.find((language) => language.code === code);
   if (!language) throw new Error(`Unsupported language: ${code}`);
   let html = template.replace('<html lang="en">', `<html lang="${code}">`);
@@ -73,6 +76,7 @@ export function renderPage(template, code, catalog) {
   }
   html = html.replace(/<!-- language-switcher -->[\s\S]*?<!-- \/language-switcher -->/, languageSwitcher(code, code === 'en' ? './' : '../', catalog));
   html = html.replace(/<!-- theme-toggle -->[\s\S]*?<!-- \/theme-toggle -->/, themeToggle(catalog));
+  html = html.replace(/<!-- github-data -->[\s\S]*?<!-- \/github-data -->/, renderGithub(githubSnapshot, code, catalog));
   // Markers are authoring-only; deployment needs no catalogs or client renderer.
   return html.replace(/\sdata-i18n(?:-content|-alt|-aria-label)?="[\w.-]+"/g, '');
 }
@@ -94,7 +98,7 @@ export function renderNotFound(code, catalog, homeRoot = '/') {
   <title>${text('404.title')}</title>
   <link rel="icon" type="image/svg+xml" href="${root}assets/favicon.svg" />
   <script src="${root}theme.js?v=20261002-1"></script>
-  <link rel="stylesheet" href="${root}styles.css?v=20261002-3" />
+  <link rel="stylesheet" href="${root}styles.css?v=20261002-5" />
 </head>
 <body>
   <header class="site-header"><div class="container header-inner"><a class="wordmark" href="${home}">mykola<span>/</span>qa</a><div class="header-controls">${themeToggle(catalog)}</div></div></header>

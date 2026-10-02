@@ -6,6 +6,7 @@ import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { publicFiles } from '../scripts/public-files.mjs';
 import { translationFiles } from '../scripts/i18n.mjs';
+import { githubStatsFiles } from '../scripts/github-data.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const privateMarker = 'Synthetic private data must never reach the build.\n';
@@ -24,7 +25,7 @@ async function fixture(context, { linkedFile, linkedDirectory, missingFile, dire
     await mkdir(dirname(target), { recursive: true });
     await symlink(privateDirectory, target, 'dir');
   }
-  for (const file of ['scripts/build.mjs', 'scripts/public-files.mjs', 'scripts/i18n.mjs', ...publicFiles, ...translationFiles]) {
+  for (const file of ['scripts/build.mjs', 'scripts/public-files.mjs', 'scripts/i18n.mjs', 'scripts/github-data.mjs', 'scripts/github-section.mjs', ...publicFiles, ...translationFiles, ...githubStatsFiles]) {
     if (file === missingFile) continue;
     const target = resolve(source, file);
     await mkdir(dirname(target), { recursive: true });
@@ -55,6 +56,8 @@ for (const [name, options] of [
   ['missing public file', { missingFile: 'assets/fonts/ibm-plex-sans-OFL.txt' }],
   ['translation linked to private data', { linkedFile: 'locales/uk.json' }],
   ['translation directory linked outside the source tree', { linkedDirectory: 'locales' }],
+  ['GitHub snapshot linked to private data', { linkedFile: 'data/github-stats.json' }],
+  ['GitHub snapshot directory linked outside the source tree', { linkedDirectory: 'data' }],
 ]) {
   test(`build rejects ${name} before creating output`, async (context) => {
     const { build, destination } = await fixture(context, options);
@@ -81,6 +84,18 @@ test('incomplete translations leave an existing build unchanged', async context 
   await mkdir(destination);
   await writeFile(resolve(destination, 'index.html'), 'Previously built public content.');
   await assert.rejects(build(), /Missing de translation: hero.tagline/);
+  assert.equal(await readFile(resolve(destination, 'index.html'), 'utf8'), 'Previously built public content.');
+  assert.deepEqual(await readdir(destination), ['index.html']);
+});
+
+test('invalid GitHub snapshot leaves an existing build unchanged', async context => {
+  const { source, build, destination } = await fixture(context);
+  const snapshot = JSON.parse(await readFile(resolve(source, 'data/github-stats.json'), 'utf8'));
+  snapshot.projects.push({ name: 'private-repository', pushedAt: snapshot.updatedAt });
+  await writeFile(resolve(source, 'data/github-stats.json'), JSON.stringify(snapshot));
+  await mkdir(destination);
+  await writeFile(resolve(destination, 'index.html'), 'Previously built public content.');
+  await assert.rejects(build(), /Invalid public GitHub snapshot/);
   assert.equal(await readFile(resolve(destination, 'index.html'), 'utf8'), 'Previously built public content.');
   assert.deepEqual(await readdir(destination), ['index.html']);
 });

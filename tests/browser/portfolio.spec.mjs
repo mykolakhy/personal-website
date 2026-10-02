@@ -13,7 +13,7 @@ test('all sections, resources and local navigation work without errors', async (
   expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior)).toBe('auto');
   await expect(page.getByText('Up to 4×', { exact: true })).toBeVisible();
   await expect(page.getByText('faster execution for CI jobs', { exact: true })).toBeVisible();
-  await expect(page.locator('main section')).toHaveCount(9);
+  await expect(page.locator('main section')).toHaveCount(10);
   await expect(page.getByRole('heading', { name: 'Manual & product QA', exact: true })).toBeVisible();
   await expect(page.locator('.hero-ai')).toContainText('Claude Code & Codex');
   const links = await page.locator('a[href^="#"]').evaluateAll((links) => links.map((link) => ({ href: link.getAttribute('href'), valid: Boolean(document.getElementById(link.hash.slice(1))) })));
