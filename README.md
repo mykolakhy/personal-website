@@ -49,6 +49,7 @@ symlinked sources and unexpected output files.
 | Ukrainian, Italian and German translations | [locales/](locales/) |
 | Layout, colors and responsive styles | [styles.css](styles.css) |
 | Case-study links and language preference | [app.js](app.js) |
+| Theme preference and switching | [theme.js](theme.js) |
 | Images, fonts and downloadable CV | [assets/](assets/) |
 | Deployment allowlist and security headers | [scripts/public-files.mjs](scripts/public-files.mjs) |
 | Build and local server | [scripts/](scripts/) |
@@ -74,6 +75,17 @@ Use `\n` for heading line breaks, not HTML. Builds reject missing, empty or extr
 translations before writing output, and do not publish the catalogs. Dev renders
 localized pages directly; builds produce static HTML, localized 404s, canonical
 URLs, language alternatives and a four-page sitemap. The CV stays in English.
+
+## Appearance
+
+Light and dark themes follow the device preference on the first visit. The header
+button switches themes and remembers an explicit choice locally, across reloads,
+languages and 404 pages. The choice is applied before the stylesheet to avoid a
+flash of the wrong theme. Without JavaScript, the site still follows the device
+preference and hides the inactive theme button. Blocked storage does not prevent
+in-page switching; no theme preference is sent to a server.
+
+## Assets
 
 Optimized assets are committed, so normal builds do not need the original photo.
 To replace the portrait, pass the path to a private source image stored outside
@@ -101,8 +113,9 @@ npm run test:browser
 
 Install browser binaries on first setup and after Playwright upgrades.
 Checks cover content/assets, build and server boundaries, Chromium/Firefox/WebKit,
-responsive layouts at 320–1440 px, accessibility, keyboard navigation, downloads,
-print, reduced motion and no-JavaScript behavior. Automated checks are not a full
+responsive layouts at 320–1440 px, both themes, theme preference persistence,
+accessibility, keyboard navigation, downloads, print, reduced motion and
+no-JavaScript behavior. Automated checks are not a full
 WCAG certification or real-device audit.
 
 GitHub CI runs on PRs targeting `main` and their updates, on pushes to `main`,

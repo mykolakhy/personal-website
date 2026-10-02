@@ -1,6 +1,6 @@
 // An explicit deployment allowlist: adding files to the repo never publishes them.
 export const publicFiles = [
-  'index.html', 'styles.css', 'app.js',
+  'index.html', 'styles.css', 'app.js', 'theme.js',
   'assets/favicon.svg', 'assets/social-preview.png',
   'assets/portrait-320.avif', 'assets/portrait-640.avif',
   'assets/portrait-320.webp', 'assets/portrait-640.webp', 'assets/portrait-640.jpg',

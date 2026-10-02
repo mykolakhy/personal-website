@@ -91,14 +91,25 @@ test('local links, anchors, IDs and referenced resources are valid', async () =>
   assert.doesNotMatch(html + css, /fonts\.googleapis|fonts\.gstatic|avatar\.png|text-overflow: ellipsis|Available to start immediately/);
 });
 
-test('normal text tokens exceed 4.5:1 on every site surface', () => {
-  const colors = Object.fromEntries([...css.matchAll(/--([\w-]+): (#[a-f0-9]{6});/g)].map((m) => [m[1], m[2]]));
+test('both themes keep text and primary buttons above 4.5:1 contrast on every surface', () => {
+  const tokens = [...css.matchAll(/--([\w-]+): light-dark\((#[a-f0-9]{6}), (#[a-f0-9]{6})\);/g)];
+  const fixed = Object.fromEntries([...css.matchAll(/--([\w-]+): (#[a-f0-9]{6});/g)].map(m => [m[1], m[2]]));
   const luminance = (hex) => hex.slice(1).match(/../g).map((channel) => parseInt(channel, 16) / 255).map((v) => v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4).reduce((sum, v, i) => sum + v * [.2126, .7152, .0722][i], 0);
-  for (const [name, color] of Object.entries(colors).filter(([name]) => name.startsWith('text-') || name === 'accent')) {
-    for (const [bgName, bg] of Object.entries(colors).filter(([name]) => name.startsWith('bg-'))) {
-      const ratio = (luminance(color) + .05) / (luminance(bg) + .05);
-      assert.ok(ratio >= 4.5, `${name} on ${bgName}: ${ratio}`);
+  const contrast = (a, b) => (Math.max(luminance(a), luminance(b)) + .05) / (Math.min(luminance(a), luminance(b)) + .05);
+  for (const [theme, column] of [['light', 2], ['dark', 3]]) {
+    const colors = { ...fixed, ...Object.fromEntries(tokens.map(m => [m[1], m[column]])) };
+    const text = Object.entries(colors).filter(([name]) => name.startsWith('text-') || name === 'accent');
+    const surfaces = Object.entries(colors).filter(([name]) => name.startsWith('bg-'));
+    assert.equal(text.length, 5);
+    assert.equal(surfaces.length, 4);
+    for (const [name, color] of text) {
+      for (const [bgName, bg] of surfaces) {
+        const ratio = contrast(color, bg);
+        assert.ok(ratio >= 4.5, `${theme}: ${name} on ${bgName}: ${ratio}`);
+      }
     }
+    for (const fill of ['accent-fill', 'accent-hover']) assert.ok(contrast(colors['on-accent'], colors[fill]) >= 4.5, `${theme}: button on ${fill}`);
+    assert.ok(contrast(colors.accent, colors['bg-page']) >= 3, `${theme}: focus indicator`);
   }
 });
 
@@ -128,13 +139,13 @@ test('build publishes only the allowlist and configures real production metadata
   assert.match(await readFile(resolve(destination, '_headers'), 'utf8'), /script-src 'self' 'sha256-/);
   const notFound = await readFile(resolve(destination, '404.html'), 'utf8');
   assert.match(notFound, /<h1>404\.<\/h1>/);
-  assert.match(notFound, /href="\/qa\/styles.css"/);
+  assert.match(notFound, /href="\/qa\/styles.css\?v=/);
   assert.match(notFound, /href="\/qa\/"/);
   assert.match(notFound, /noindex, follow/);
   await build({ destination, siteURL: null });
   assert.match(await readFile(resolve(destination, 'index.html'), 'utf8'), /noindex, nofollow/);
   assert.doesNotMatch(await readFile(resolve(destination, 'index.html'), 'utf8'), /rel="canonical"/);
-  assert.match(await readFile(resolve(destination, '404.html'), 'utf8'), /href="\/styles.css"/);
+  assert.match(await readFile(resolve(destination, '404.html'), 'utf8'), /href="\/styles.css\?v=/);
   assert.match(await readFile(resolve(destination, '_headers'), 'utf8'), /X-Robots-Tag: noindex, nofollow/);
 });
 
