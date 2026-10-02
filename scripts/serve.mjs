@@ -6,6 +6,7 @@ import { publicFiles, securityHeaders } from './public-files.mjs';
 import { languages, translationFiles, generatedPages, readCatalogs, renderPage, renderNotFound } from './i18n.mjs';
 import { publicSourceBytes } from './build.mjs';
 import { githubStatsFiles, validateSnapshot } from './github-data.mjs';
+import { aiStatsFiles, validateAISnapshot } from './ai-data.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.avif': 'image/avif', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.pdf': 'application/pdf', '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml; charset=utf-8' };
@@ -33,12 +34,13 @@ export function websiteServer({ directory = root, headers = securityHeaders() } 
       const file = resolve(directory, path);
       let bytes;
       if (directory === root && generatedPages.includes(path)) {
-        const sources = await publicSourceBytes(['index.html', ...translationFiles, ...githubStatsFiles]);
+        const sources = await publicSourceBytes(['index.html', ...translationFiles, ...githubStatsFiles, ...aiStatsFiles]);
         const template = sources.get('index.html').toString('utf8');
         const code = languages.find((language) => path === `${language.path}index.html` || path === `${language.path}404.html`).code;
         const catalog = readCatalogs(template, sources).get(code);
         const github = validateSnapshot(JSON.parse(sources.get(githubStatsFiles[0]).toString('utf8')));
-        bytes = Buffer.from(path.endsWith('404.html') ? renderNotFound(code, catalog) : renderPage(template, code, catalog, github));
+        const ai = validateAISnapshot(JSON.parse(sources.get(aiStatsFiles[0]).toString('utf8')));
+        bytes = Buffer.from(path.endsWith('404.html') ? renderNotFound(code, catalog) : renderPage(template, code, catalog, github, ai));
       } else {
         if (await realpath(file) !== file) return finish(404, 'Not found');
         const info = await stat(file);

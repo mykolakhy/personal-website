@@ -13,6 +13,6 @@ export function pagesSiteURL(environment) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  const result = await build({ siteURL: pagesSiteURL(process.env), refreshGithub: process.env.CF_PAGES_BRANCH === 'main' });
+  const result = await build({ siteURL: pagesSiteURL(process.env), refreshGithub: process.env.CF_PAGES_BRANCH === 'main', refreshAI: process.env.CF_PAGES_BRANCH === 'main' });
   console.log(`Built ${result.files} allowlisted files for Cloudflare Pages (${result.production ? 'production' : 'non-indexable preview'}).`);
 }

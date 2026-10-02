@@ -187,6 +187,38 @@ h3 { font-size: 24px; line-height: 1.3; }
 .github-ci-state { display: flex; align-items: center; gap: 12px; color: var(--text-heading); font: 600 24px/1.4 var(--font-display); }
 .github-ci code { color: var(--text-muted); font: 400 12px/1.6 var(--font-mono); overflow-wrap: anywhere; }
 .github-ci .text-link { margin-top: 12px; }
+.ai-stats-metrics { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; margin: 40px 0; }
+.ai-stats-metrics > div { display: flex; flex-direction: column; min-width: 0; gap: 10px; padding: 18px; border: 1px solid var(--border-hairline); border-radius: 8px; background: var(--bg-surface); }
+.ai-stats-metrics dt { color: var(--text-muted); font: 400 12px/1.6 var(--font-mono); }
+.ai-stats-metrics dd { order: -1; margin: 0; color: var(--text-heading); font: 600 clamp(22px, 2.2vw, 30px)/1.4 var(--font-mono); letter-spacing: -.04em; overflow-wrap: anywhere; }
+.ai-stats-metrics [data-ai-metric="longestRunningTurnSec"] { font-size: 22px; }
+.ai-stat-unit { font: 400 12px/1.6 var(--font-mono); letter-spacing: normal; }
+.ai-compact-number { display: inline-flex; flex-wrap: wrap; align-items: baseline; column-gap: .12em; max-width: 100%; }
+.ai-token-number, .ai-token-unit, .ai-duration-part { white-space: nowrap; overflow-wrap: normal; }
+.ai-token-unit { font-size: .65em; }
+.ai-stats-metrics dd.ai-stat-unavailable { font-size: 16px; }
+.ai-monthly { padding-top: 28px; border-top: 1px solid var(--border-hairline); }
+.ai-monthly h3 { font-size: 22px; }
+.ai-stats-note, .ai-stats-updated { max-width: 85ch; color: var(--text-muted); font-size: 14px; line-height: 1.65; }
+.ai-stats-note { margin: 12px 0 0; }
+.ai-stats-updated { margin: 8px 0 24px; }
+.ai-stats-method { border-top: 1px solid var(--border-strong); }
+.ai-stats-method .detail-body p { max-width: 85ch; margin: 0; }
+.ai-months { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 24px 0; }
+.ai-month { display: flex; flex-direction: column; min-width: 0; padding: 18px; border: 1px solid var(--border-hairline); border-radius: 8px; background: var(--bg-sunken); }
+.ai-month dt { min-height: 60px; color: var(--text-heading); font: 500 14px/1.5 var(--font-mono); }
+.ai-month time { display: flex; justify-content: space-between; align-items: baseline; gap: 4px; }
+.ai-month-year { color: var(--text-muted); font-size: 12px; }
+.ai-month-partial { display: block; margin-top: 4px; color: var(--text-muted); font: 400 10px/1.5 var(--font-mono); }
+.ai-month dd { margin: 0; }
+.ai-month-count { padding: 12px 0 8px; color: var(--text-heading); font: 600 26px/1.2 var(--font-mono); overflow-wrap: anywhere; }
+.ai-month-count.ai-month-unavailable { font-size: 14px; }
+.ai-month-days { min-height: 36px; color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+.ai-month dd.ai-month-bar { margin-top: auto; padding-top: 16px; }
+.ai-month meter { display: block; width: 100%; height: 6px; border: 0; border-radius: 999px; background: var(--activity-0); }
+.ai-month meter::-webkit-meter-bar { height: 6px; border: 0; border-radius: 999px; background: var(--activity-0); }
+.ai-month meter::-webkit-meter-optimum-value { border-radius: 999px; background: var(--accent); }
+.ai-month meter::-moz-meter-bar { border-radius: 999px; background: var(--accent); }
 details { border-bottom: 1px solid var(--border-strong); }
 summary { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 64px; padding: 16px 4px; cursor: pointer; color: var(--text-heading); font: 500 17px/1.5 var(--font-display); list-style: none; }
 summary::-webkit-details-marker { display: none; }
@@ -235,6 +267,7 @@ details[open] .disclosure-mark { transform: rotate(45deg); }
   .section-heading-row, .about-grid, .writing-grid, .contact-grid { column-gap: 32px; }
   .github-projects { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .github-projects > :last-child:nth-child(3) { grid-column: 1 / -1; }
+  .ai-stats-metrics, .ai-months { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 800px) {
   :root { --page-pad: 24px; }
@@ -246,6 +279,7 @@ details[open] .disclosure-mark { transform: rotate(45deg); }
   .principles-grid { grid-template-columns: 1fr; gap: 32px; }
   .footer-inner { flex-direction: column; gap: 8px; }
   .github-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ai-stats-metrics, .ai-months { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .github-months { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .github-quality { grid-template-columns: 1fr; gap: 28px; }
 }
@@ -272,6 +306,13 @@ details[open] .disclosure-mark { transform: rotate(45deg); }
   .github-quality { padding: 20px; }
   .github-months { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .github-month { padding: 14px 12px; }
+  .ai-stats-metrics, .ai-months { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ai-stats-metrics { gap: 12px; }
+  .ai-stats-metrics > div, .ai-month { padding: 14px 12px; }
+  .ai-stats-metrics > div:last-child { grid-column: 1 / -1; }
+  .ai-stats-metrics dd { font-size: 22px; }
+  .ai-stats-metrics [data-ai-metric="longestRunningTurnSec"] { font-size: 20px; }
+  .ai-month-count { font-size: 22px; }
 }
 @media (max-width: 360px) {
   :root { --page-pad: 16px; }
@@ -287,6 +328,8 @@ details[open] .disclosure-mark { transform: rotate(45deg); }
   a:focus-visible, button:focus-visible, summary:focus-visible { outline-color: Highlight; }
   .calendar-day { border: 1px dotted CanvasText; }
   .calendar-day:not([data-level="0"]):not(.calendar-pad) { border-style: solid; background: Highlight; forced-color-adjust: none; }
+  .ai-stats-metrics > div, .ai-month { border-color: CanvasText; }
+  .ai-month meter { border: 1px solid CanvasText; }
 }
 @media print {
   :root, :root[data-theme] { color-scheme: light; }
@@ -309,6 +352,10 @@ details[open] .disclosure-mark { transform: rotate(45deg); }
   .section-heading-row, .writing-grid, .contact-grid { grid-template-columns: 1fr; gap: 20px; }
   .case-details { display: none; }
   .github-calendar, .github-monthly { display: none; }
+  .ai-stats-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ai-months { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .ai-stats-metrics > div, .ai-month { break-inside: avoid; background: white; }
+  .ai-stats-metrics dd, .ai-stats-metrics dt, .ai-month dt, .ai-month-count, .ai-stats-note, .ai-stats-updated, .ai-month-days, .ai-month-year, .ai-month-partial { color: #222; }
   .github-projects, .github-quality { grid-template-columns: 1fr; gap: 16px; }
   .github-projects > :last-child:nth-child(3) { grid-column: auto; }
   .github-project, .github-quality { padding: 16px; background: white; }

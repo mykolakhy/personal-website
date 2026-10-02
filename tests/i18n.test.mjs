@@ -39,7 +39,7 @@ test('all static pages translate text and attributes while preserving links, con
     const catalog = catalogs.get(code);
     const html = renderPage(template, code, catalog);
     assert.match(html, new RegExp(`<html lang="${code}">`));
-    assert.equal([...html.matchAll(/<section\b/g)].length, 10);
+    assert.equal([...html.matchAll(/<section\b/g)].length, 11);
     assert.deepEqual([...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]), englishIDs);
     assert.match(html, /<h1 id="hero-title">Mykola Khytra\.<\/h1>/);
     assert.match(html, /data-language="en"/);

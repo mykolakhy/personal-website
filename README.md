@@ -51,6 +51,7 @@ symlinked sources and unexpected output files.
 | Case-study links and language preference | [app.js](app.js) |
 | Theme preference and switching | [theme.js](theme.js) |
 | Public GitHub data and its collection/rendering | [data/github-stats.json](data/github-stats.json), [scripts/github-data.mjs](scripts/github-data.mjs), [scripts/github-section.mjs](scripts/github-section.mjs) |
+| Aggregate ChatGPT/Codex activity | [data/ai-stats.json](data/ai-stats.json), [scripts/ai-data.mjs](scripts/ai-data.mjs), [scripts/ai-section.mjs](scripts/ai-section.mjs) |
 | Images, fonts and downloadable CV | [assets/](assets/) |
 | Deployment allowlist and security headers | [scripts/public-files.mjs](scripts/public-files.mjs) |
 | Build and local server | [scripts/](scripts/) |
@@ -70,7 +71,7 @@ JavaScript, covered links are temporarily non-interactive until the menu closes.
 Direct localized links take priority over the saved preference; `/?lang=en`
 explicitly selects English. No browser-language detection or tracking is used.
 
-English copy is authored in `index.html` and `scripts/github-section.mjs`; `data-i18n` markers map to plain-text
+English copy is authored in `index.html`, `scripts/github-section.mjs` and `scripts/ai-section.mjs`; `data-i18n` markers map to plain-text
 keys in the three JSON catalogs. Update all catalogs when changing marked copy.
 Use `\n` for heading line breaks, not HTML. Builds reject missing, empty or extra
 translations before writing output, and do not publish the catalogs. Dev renders
@@ -154,6 +155,57 @@ On Cloudflare production builds, `build:pages` reads the newer validated public
 release asset without credentials. If it is unavailable or invalid, it retains the
 dated baseline. Local/CI/preview builds stay offline and deterministic. The site
 shows the snapshot timestamp; it is refreshed daily, not in real time.
+
+## ChatGPT / Codex activity
+
+The AI section contains five profile metrics and twelve monthly token-activity
+cards, in all languages and both themes. Exact token counts are available to
+screen readers and in each compact number's tooltip. There are no case studies,
+inferred productivity gains, or invented session/completed-task counts.
+
+The local collector uses the documented Codex App Server `account/usage/read`
+method with the owner's existing local login. It does not read conversation
+history or copy authentication files. The response is reduced to an exact
+allowlist: summary values, twelve monthly totals, activity-day counts, source,
+and collection timestamp. Additional service fields (including `threadUsage`)
+are discarded. The snapshot is public, owner-approved data, not a private export.
+
+Monthly counts sum only the daily buckets returned by the service. A month
+without returned buckets has zero **reported** tokens; this does not prove
+inactivity. An unavailable history or metric stays unavailable, not zero.
+The current month is partial, lifetime totals use a different period, and the
+longest task is elapsed task time, not human hours worked. Insights such as skills,
+Fast Mode and reasoning are not included because the verified method does not
+provide them. Other providers, including Claude, are not represented.
+
+Refresh locally with a supported, signed-in Codex CLI:
+
+```sh
+npm run refresh:ai
+npm test
+npm run build
+```
+
+Collection is never run by a hosted build or CI. Failed refreshes preserve the
+previous snapshot, and no upstream errors, account identifiers, or credentials
+are printed. `data/ai-stats.json` is a build input, not an exposed website route.
+No OpenAI credentials belong in this repository, GitHub secrets, or Cloudflare.
+
+After this feature is merged, an owner can explicitly publish an updated snapshot:
+
+```sh
+npm run publish:ai -- --confirm-publication
+```
+
+This uploads only validated aggregates to the public `ai-activity` release and
+requests the existing main-branch GitHub refresh/Cloudflare deployment workflow.
+It does not commit to `main`, bypass protections, or create a new account login.
+Publication is manual; no local recurring collector is installed automatically.
+Cloudflare production builds use a newer valid public asset when available,
+otherwise the committed dated baseline. Dev, CI and preview builds stay offline.
+Visitors never contact OpenAI, and `connect-src 'none'` is unchanged.
+
+Official source: [Codex App Server](https://learn.chatgpt.com/docs/app-server).
 
 ## Verification
 

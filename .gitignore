@@ -1,6 +1,9 @@
 # Credentials and local configuration
 .env
 .env.*
+.codex/
+auth.json
+data/.ai-stats-*.tmp
 !.env.example
 *.pem
 *.key
