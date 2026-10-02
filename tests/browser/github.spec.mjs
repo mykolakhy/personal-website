@@ -19,6 +19,8 @@ for (const code of Object.keys(labels)) for (const theme of ['light', 'dark']) f
     page.on('request', request => { if (!request.url().startsWith('http://127.0.0.1:4180')) external.push(request.url()); });
     await page.goto((code === 'en' ? '/' : `/${code}/`) + '#github');
     await expect(page.getByRole('heading', { name: labels[code].title, exact: true })).toBeVisible();
+    if (width === 320) await expect.poll(() => page.locator('.calendar-scroll').evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
+    await expect.poll(() => page.locator('.calendar-scroll').evaluate(element => Math.abs(element.scrollWidth - element.clientWidth - element.scrollLeft))).toBeLessThanOrEqual(1);
     for (const key of ['contributions', 'activeDays', 'pullRequests', 'reviews']) await expect(page.locator(`[data-total="${key}"]`)).toHaveText(new Intl.NumberFormat(code).format(snapshot.totals[key]));
     await expect(page.locator('.calendar-day[data-date]')).toHaveCount(snapshot.days.length);
     const calendar = await page.locator('.calendar-day[data-date]').evaluateAll(cells => cells.map(cell => ({ date: cell.dataset.date, count: Number(cell.dataset.count), level: Number(cell.dataset.level) })));
@@ -55,18 +57,85 @@ for (const code of Object.keys(labels)) for (const theme of ['light', 'dark']) f
 test('mobile calendar and monthly data work with a keyboard', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 900 });
   await page.goto('/#github');
+  await expect.poll(() => page.locator('.calendar-scroll').evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
   await page.locator('.calendar-scroll').focus();
   await expect(page.locator('.calendar-scroll')).toBeFocused();
   const before = await page.locator('.calendar-scroll').evaluate(element => element.scrollLeft);
   expect(before).toBeGreaterThan(0);
   await page.keyboard.press('ArrowLeft');
   await expect.poll(() => page.locator('.calendar-scroll').evaluate(element => element.scrollLeft)).toBeLessThan(before);
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(() => page.locator('.calendar-scroll').evaluate(element => element.scrollLeft)).toBe(before);
   await page.locator('.github-monthly summary').focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('.github-monthly')).toHaveAttribute('open', '');
   await page.keyboard.press('Space');
   await expect(page.locator('.github-monthly')).not.toHaveAttribute('open', '');
 });
+
+test('calendar shows the newest activity when styling is applied only at load', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 900 });
+  await page.route('http://127.0.0.1:4180/', async route => {
+    const response = await route.fetch();
+    // Reproduce the CI race deterministically instead of relying on timing:
+    // the deferred app runs before the calendar has its overflow layout.
+    await route.fulfill({ response, body: (await response.text()).replace('rel="stylesheet"', 'rel="stylesheet" media="print"') });
+  });
+  await page.addInitScript(() => {
+    document.addEventListener('DOMContentLoaded', () => {
+      const calendar = document.querySelector('.calendar-scroll');
+      window.calendarBeforeLoad = { width: calendar.clientWidth, full: calendar.scrollWidth, left: calendar.scrollLeft };
+    }, { once: true });
+    window.addEventListener('load', () => { document.querySelector('link[rel="stylesheet"]').media = 'all'; }, { once: true });
+  });
+  await page.goto('/#github');
+  const unstyled = await page.evaluate(() => window.calendarBeforeLoad);
+  expect(unstyled.full).toBe(unstyled.width);
+  expect(unstyled.left).toBe(0);
+  const calendar = page.locator('.calendar-scroll');
+  await expect.poll(() => calendar.evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
+  await expect.poll(() => calendar.evaluate(element => Math.abs(element.scrollWidth - element.clientWidth - element.scrollLeft))).toBeLessThanOrEqual(1);
+});
+
+for (const input of ['keyboard', 'wheel']) {
+  test(`late load preserves a calendar position chosen with the ${input}`, async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 900 });
+    let releaseLoad;
+    const loadGate = new Promise(resolve => { releaseLoad = resolve; });
+    // An eager image reliably holds the load event; a font preload does not.
+    await page.route('http://127.0.0.1:4180/', async route => {
+      const response = await route.fetch();
+      await route.fulfill({ response, body: (await response.text()).replace('</body>', '<img src="./assets/favicon.svg?calendar-load-gate" alt="" hidden />\n</body>') });
+    });
+    await page.route('http://127.0.0.1:4180/assets/favicon.svg?calendar-load-gate', async route => { await loadGate; await route.continue(); });
+    try {
+      await page.goto('/#github', { waitUntil: 'domcontentloaded' });
+      expect(await page.evaluate(() => document.readyState)).not.toBe('complete');
+      const calendar = page.locator('.calendar-scroll');
+      await expect.poll(() => calendar.evaluate(element => element.scrollWidth - element.clientWidth)).toBeGreaterThan(0);
+      const before = await calendar.evaluate(element => element.scrollLeft);
+      if (input === 'keyboard') {
+        await calendar.focus();
+        await page.keyboard.press(before > 0 ? 'ArrowLeft' : 'ArrowRight');
+      } else {
+        await calendar.hover();
+        const delta = before > 0 ? -120 : 120;
+        const maximum = await calendar.evaluate(element => element.scrollWidth - element.clientWidth);
+        await page.mouse.wheel(delta, 0);
+        await expect.poll(() => calendar.evaluate(element => element.scrollLeft)).toBe(Math.max(0, Math.min(maximum, before + delta)));
+      }
+      await expect.poll(() => calendar.evaluate(element => element.scrollLeft)).not.toBe(before);
+      const chosen = await calendar.evaluate(element => element.scrollLeft);
+      releaseLoad();
+      await page.waitForLoadState('load');
+      // Let the app's post-load frame run before checking for an unwanted reset.
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(resolve)));
+      expect(await calendar.evaluate(element => element.scrollLeft)).toBe(chosen);
+    } finally {
+      releaseLoad();
+    }
+  });
+}
 
 test('GitHub data and disclosures work without JavaScript', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 375, height: 900 } });

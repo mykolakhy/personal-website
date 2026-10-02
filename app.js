@@ -68,7 +68,22 @@ openLinkedCase();
 // remains usable with touch/keyboard and still works without JavaScript.
 const calendar = document.querySelector('.calendar-scroll');
 if (calendar) {
-  calendar.scrollLeft = calendar.scrollWidth;
+  const showNewestActivity = () => { calendar.scrollLeft = calendar.scrollWidth; };
+  showNewestActivity();
+  // WebKit can run a deferred script before the stylesheet has been applied.
+  // Retry on the first rendered frame after load, without overwriting a gesture.
+  if (document.readyState !== 'complete') {
+    let pendingFrame;
+    const afterLoad = () => { pendingFrame = requestAnimationFrame(showNewestActivity); };
+    window.addEventListener('load', afterLoad, { once: true });
+    const preserveUserPosition = () => {
+      window.removeEventListener('load', afterLoad);
+      cancelAnimationFrame(pendingFrame);
+    };
+    calendar.addEventListener('pointerdown', preserveUserPosition, { once: true });
+    calendar.addEventListener('wheel', preserveUserPosition, { once: true, passive: true });
+    calendar.addEventListener('keydown', preserveUserPosition, { once: true });
+  }
   calendar.addEventListener('keydown', event => {
     if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
     event.preventDefault();
