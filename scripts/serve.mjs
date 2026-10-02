@@ -3,26 +3,47 @@ import { readFile, realpath, stat } from 'node:fs/promises';
 import { resolve, extname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { publicFiles, securityHeaders } from './public-files.mjs';
+import { languages, translationFiles, generatedPages, readCatalogs, renderPage, renderNotFound } from './i18n.mjs';
+import { publicSourceBytes } from './build.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.avif': 'image/avif', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.pdf': 'application/pdf', '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml; charset=utf-8' };
 export function websiteServer({ directory = root, headers = securityHeaders() } = {}) {
-  const allowed = new Set([...publicFiles, 'robots.txt', 'sitemap.xml']);
+  const allowed = new Set([...publicFiles, ...generatedPages, 'robots.txt', 'sitemap.xml']);
   return createServer(async (request, response) => {
     const finish = (code, message) => { response.writeHead(code, { ...headers, 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' }); response.end(message); };
     if (!['GET', 'HEAD'].includes(request.method)) { response.setHeader('Allow', 'GET, HEAD'); return finish(405, 'Method not allowed'); }
     let path;
     try {
-      path = decodeURIComponent(new URL(request.url, 'http://127.0.0.1').pathname).replace(/^\//, '') || 'index.html';
+      const url = new URL(request.url, 'http://127.0.0.1');
+      path = decodeURIComponent(url.pathname).replace(/^\//, '');
+      if (languages.slice(1).some(({ code }) => path === code)) {
+        response.writeHead(301, { ...headers, Location: `/${path}/${url.search}` });
+        return response.end();
+      }
+      if (languages.some(({ path: route }) => path === route)) path += 'index.html';
     } catch { return finish(400, 'Invalid URL'); }
-    if (!allowed.has(path)) return finish(404, 'Not found');
+    const found = allowed.has(path);
+    if (!found) {
+      const language = languages.slice(1).find(({ path: route }) => path.startsWith(route)) ?? languages[0];
+      path = `${language.path}404.html`;
+    }
     try {
       const file = resolve(directory, path);
-      if (await realpath(file) !== file) return finish(404, 'Not found');
-      const info = await stat(file);
-      if (!info.isFile()) return finish(404, 'Not found');
-      const bytes = await readFile(file);
-      response.writeHead(200, { ...headers, 'Content-Type': types[extname(file)], 'Content-Length': bytes.length, 'Cache-Control': 'no-store' });
+      let bytes;
+      if (directory === root && generatedPages.includes(path)) {
+        const sources = await publicSourceBytes(['index.html', ...translationFiles]);
+        const template = sources.get('index.html').toString('utf8');
+        const code = languages.find((language) => path === `${language.path}index.html` || path === `${language.path}404.html`).code;
+        const catalog = readCatalogs(template, sources).get(code);
+        bytes = Buffer.from(path.endsWith('404.html') ? renderNotFound(code, catalog) : renderPage(template, code, catalog));
+      } else {
+        if (await realpath(file) !== file) return finish(404, 'Not found');
+        const info = await stat(file);
+        if (!info.isFile()) return finish(404, 'Not found');
+        bytes = await readFile(file);
+      }
+      response.writeHead(found && !path.endsWith('404.html') ? 200 : 404, { ...headers, 'Content-Type': types[extname(file)], 'Content-Length': bytes.length, 'Cache-Control': 'no-store' });
       response.end(request.method === 'HEAD' ? undefined : bytes);
     } catch { finish(404, 'Not found'); }
   });

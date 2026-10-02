@@ -4,14 +4,15 @@ import { resolve, dirname } from 'node:path';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { publicFiles, securityHeaders } from './public-files.mjs';
+import { languages, translationFiles, generatedPages, readCatalogs, renderPage, renderNotFound, escapeHTML } from './i18n.mjs';
 
 const root = resolve(import.meta.dirname, '..');
-async function publicSourceBytes() {
+export async function publicSourceBytes(files = [...publicFiles, ...translationFiles]) {
   const sourceRoot = await realpath(root);
   const sources = new Map();
   // Validate and snapshot all sources before touching output. Never reopen them
   // while publishing: a source replaced by a symlink must not change the bytes.
-  for (const file of publicFiles) {
+  for (const file of files) {
     const source = resolve(sourceRoot, file);
     let handle;
     try {
@@ -41,66 +42,50 @@ export function productionURL(value) {
 export async function build({ destination = resolve(root, 'dist'), siteURL = process.env.SITE_URL } = {}) {
   const base = productionURL(siteURL);
   const sources = await publicSourceBytes();
-  const escape = (value) => value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;');
-  let html = sources.get('index.html').toString('utf8');
-  let scriptHash;
-  if (base) {
-    const canonical = base.href;
-    const image = new URL('assets/social-preview.png', base).href;
-    const structured = JSON.stringify({
-      '@context': 'https://schema.org', '@type': 'ProfilePage', url: canonical,
-      mainEntity: { '@type': 'Person', name: 'Mykola Khytra', jobTitle: 'Senior QA Engineer',
-        url: canonical, image: new URL('assets/portrait-640.jpg', base).href,
-        sameAs: ['https://www.linkedin.com/in/mykola-khytra/', 'https://github.com/mykolakhy'] },
-    }).replaceAll('<', '\\u003c');
-    scriptHash = 'sha256-' + createHash('sha256').update(structured).digest('base64');
-    html = html.replace('content="./assets/social-preview.png"', `content="${escape(image)}"`)
-      .replace('</head>', `  <link rel="canonical" href="${escape(canonical)}" />\n  <meta property="og:url" content="${escape(canonical)}" />\n  <script type="application/ld+json">${structured}</script>\n</head>`);
-  } else {
-    html = html.replace('</head>', '  <meta name="robots" content="noindex, nofollow" />\n</head>');
+  const template = sources.get('index.html').toString('utf8');
+  const catalogs = readCatalogs(template, sources);
+  const pages = new Map();
+  const scriptHashes = [];
+  for (const { code, path } of languages) {
+    let html = renderPage(template, code, catalogs.get(code));
+    if (base) {
+      const canonical = new URL(path, base).href;
+      const image = new URL('assets/social-preview.png', base).href;
+      const structured = JSON.stringify({
+        '@context': 'https://schema.org', '@type': 'ProfilePage', url: canonical, inLanguage: code,
+        mainEntity: { '@type': 'Person', name: 'Mykola Khytra', jobTitle: 'Senior QA Engineer',
+          url: canonical, image: new URL('assets/portrait-640.jpg', base).href,
+          sameAs: ['https://www.linkedin.com/in/mykola-khytra/', 'https://github.com/mykolakhy'] },
+      }).replaceAll('<', '\\u003c');
+      scriptHashes.push('sha256-' + createHash('sha256').update(structured).digest('base64'));
+      const alternates = [...languages, { code: 'x-default', path: '' }].map((language) =>
+        `  <link rel="alternate" hreflang="${language.code}" href="${escapeHTML(new URL(language.path, base).href)}" />`).join('\n');
+      html = html.replace(/(property="og:image" content=")[^"]+/, '$1' + escapeHTML(image))
+        .replace('</head>', `  <link rel="canonical" href="${escapeHTML(canonical)}" />\n${alternates}\n  <meta property="og:url" content="${escapeHTML(canonical)}" />\n  <script type="application/ld+json">${structured}</script>\n</head>`);
+    } else {
+      html = html.replace('</head>', '  <meta name="robots" content="noindex, nofollow" />\n</head>');
+    }
+    pages.set(`${path}index.html`, html);
+    pages.set(`${path}404.html`, renderNotFound(code, catalogs.get(code), base?.pathname ?? '/'));
   }
   await mkdir(destination, { recursive: true });
   // Preserve unexpected user files, but refuse to label that directory publishable.
-  const approved = new Set([...publicFiles, 'robots.txt', 'sitemap.xml', '_headers', '404.html']);
+  const approved = new Set([...publicFiles, ...generatedPages, 'robots.txt', 'sitemap.xml', '_headers']);
   const existing = await readdir(destination, { recursive: true, withFileTypes: true });
   for (const entry of existing.filter((entry) => !entry.isDirectory())) {
     const relative = resolve(entry.parentPath, entry.name).slice(destination.length + 1);
     if (!approved.has(relative) || entry.isSymbolicLink()) throw new Error(`Unexpected build output: ${relative}. Move it out of dist before building.`);
   }
-  for (const file of publicFiles) {
+  for (const file of new Set([...publicFiles, ...generatedPages])) {
     const target = resolve(destination, file);
     await mkdir(dirname(target), { recursive: true });
-    await writeFile(target, file === 'index.html' ? html : sources.get(file));
+    await writeFile(target, pages.get(file) ?? sources.get(file));
   }
-  // A top-level 404 disables Cloudflare Pages' default SPA fallback. Rooted
-  // resource URLs also work when this document is served for a nested bad URL.
-  const home = escape(base?.pathname ?? '/');
-  await writeFile(resolve(destination, '404.html'), `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="robots" content="noindex, follow" />
-  <title>Page not found — Mykola Khytra</title>
-  <link rel="icon" type="image/svg+xml" href="${home}assets/favicon.svg" />
-  <link rel="stylesheet" href="${home}styles.css" />
-</head>
-<body>
-  <header class="site-header"><div class="container header-inner"><a class="wordmark" href="${home}" aria-label="Mykola Khytra home">mykola<span>/</span>qa</a></div></header>
-  <main class="hero grid-texture"><div class="container hero-inner">
-    <p class="eyebrow">Page not found</p>
-    <h1>404.</h1>
-    <p class="hero-lede">This page does not exist. Let's get you back to the portfolio.</p>
-    <div class="hero-actions"><a class="button button-primary" href="${home}">Back to the homepage <span aria-hidden="true">→</span></a></div>
-  </div></main>
-</body>
-</html>
-`);
   await writeFile(resolve(destination, 'robots.txt'), base ? `User-agent: *\nAllow: /\nSitemap: ${new URL('sitemap.xml', base).href}\n` : 'User-agent: *\nDisallow: /\n');
-  await writeFile(resolve(destination, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${base ? `<url><loc>${base.href.replaceAll('&', '&amp;').replaceAll('<', '&lt;')}</loc></url>` : ''}</urlset>\n`);
-  const headers = { ...securityHeaders(scriptHash), ...(!base ? { 'X-Robots-Tag': 'noindex, nofollow' } : {}) };
+  await writeFile(resolve(destination, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${base ? languages.map(({ path }) => `<url><loc>${escapeHTML(new URL(path, base).href)}</loc></url>`).join('') : ''}</urlset>\n`);
+  const headers = { ...securityHeaders(scriptHashes), ...(!base ? { 'X-Robots-Tag': 'noindex, nofollow' } : {}) };
   await writeFile(resolve(destination, '_headers'), `/*\n${Object.entries(headers).map(([key, value]) => `  ${key}: ${value}`).join('\n')}\n  Cache-Control: public, max-age=0, must-revalidate\n`);
-  return { destination, production: Boolean(base), files: publicFiles.length + 4 };
+  return { destination, production: Boolean(base), files: approved.size };
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const result = await build();

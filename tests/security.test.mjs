@@ -19,6 +19,21 @@ test('workflow uses immutable action references and read-only permissions', () =
   assert.match(workflow, /persist-credentials: false/);
 });
 
+test('CI avoids working-branch push duplicates while preserving PR and manual checks', () => {
+  const workflow = readFileSync('.github/workflows/ci.yml', 'utf8');
+  const triggers = workflow.match(/^on:\n([\s\S]*?)(?=^\S)/m)?.[1];
+  assert.ok(triggers, 'workflow has explicit triggers');
+  assert.deepEqual([...triggers.matchAll(/^  (\w+):/gm)].map(match => match[1]), ['push', 'pull_request', 'workflow_dispatch']);
+  assert.match(triggers, /^  push:\n    branches: \[main\]$/m);
+  assert.match(triggers, /^  pull_request:\n    branches: \[main\]$/m);
+  assert.doesNotMatch(triggers, /paths|types|branches-ignore/, 'required PR checks must not be silently filtered out');
+  assert.match(workflow, /group: website-\$\{\{ github\.workflow \}\}-\$\{\{ github\.ref \}\}/);
+  assert.match(workflow, /cancel-in-progress: true/);
+  assert.match(workflow, /name: quality/);
+  assert.match(workflow, /name: browser-regression/);
+  assert.match(workflow, /run: npm run test:browser/);
+});
+
 test('main allows regular merge commits without weakening repository protection', () => {
   const ruleset = JSON.parse(readFileSync('.github/main-ruleset.json', 'utf8'));
   assert.equal(ruleset.enforcement, 'active');

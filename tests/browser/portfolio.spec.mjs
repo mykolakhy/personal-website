@@ -71,9 +71,12 @@ for (const width of [320, 375, 390, 600, 768, 800, 801, 1024, 1440]) {
   });
 }
 
-test('keyboard skip link, disclosures and deep links', async ({ page }) => {
+// Safari on macOS uses Option+Tab for links unless Full Keyboard Access is enabled.
+const linkTab = (project) => process.platform === 'darwin' && project === 'webkit' ? 'Alt+Tab' : 'Tab';
+
+test('keyboard skip link, disclosures and deep links', async ({ page }, info) => {
   await page.goto('/');
-  await page.keyboard.press('Tab');
+  await page.keyboard.press(linkTab(info.project.name));
   await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.locator('#main')).toBeFocused();
@@ -120,10 +123,10 @@ test('core content and native disclosures work with JavaScript disabled', async 
   await context.close();
 });
 
-test('forced-colors keeps visible keyboard focus and control boundaries', async ({ page }) => {
+test('forced-colors keeps visible keyboard focus and control boundaries', async ({ page }, info) => {
   await page.emulateMedia({ forcedColors: 'active' });
   await page.goto('/');
-  await page.keyboard.press('Tab');
+  await page.keyboard.press(linkTab(info.project.name));
   await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused();
   const outline = await page.getByRole('link', { name: 'Skip to content' }).evaluate((el) => getComputedStyle(el).outlineStyle);
   expect(outline).toBe('solid');

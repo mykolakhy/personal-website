@@ -46,8 +46,9 @@ symlinked sources and unexpected output files.
 | Change | File or directory |
 | --- | --- |
 | Text, sections and links | [index.html](index.html) |
+| Ukrainian, Italian and German translations | [locales/](locales/) |
 | Layout, colors and responsive styles | [styles.css](styles.css) |
-| Case-study deep-link behavior | [app.js](app.js) |
+| Case-study links and language preference | [app.js](app.js) |
 | Images, fonts and downloadable CV | [assets/](assets/) |
 | Deployment allowlist and security headers | [scripts/public-files.mjs](scripts/public-files.mjs) |
 | Build and local server | [scripts/](scripts/) |
@@ -56,6 +57,23 @@ symlinked sources and unexpected output files.
 Keep claims evidence-based: distinguish personal contributions from team-scale
 figures and CI-job improvements from whole-pipeline results. Keep experience,
 availability and manual/automation/AI positioning accurate.
+
+## Languages
+
+English lives at `/`, Ukrainian at `/uk/`, Italian at `/it/` and German at `/de/`.
+The native header selector works without JavaScript. With JavaScript it remembers
+the selection locally and keeps the current section when switching languages.
+On mobile the menu opens directly below its button, over navigation. With
+JavaScript, covered links are temporarily non-interactive until the menu closes.
+Direct localized links take priority over the saved preference; `/?lang=en`
+explicitly selects English. No browser-language detection or tracking is used.
+
+English copy is authored in `index.html`; `data-i18n` markers map to plain-text
+keys in the three JSON catalogs. Update all catalogs when changing marked copy.
+Use `\n` for heading line breaks, not HTML. Builds reject missing, empty or extra
+translations before writing output, and do not publish the catalogs. Dev renders
+localized pages directly; builds produce static HTML, localized 404s, canonical
+URLs, language alternatives and a four-page sitemap. The CV stays in English.
 
 Optimized assets are committed, so normal builds do not need the original photo.
 To replace the portrait, pass the path to a private source image stored outside
@@ -87,8 +105,13 @@ responsive layouts at 320–1440 px, accessibility, keyboard navigation, downloa
 print, reduced motion and no-JavaScript behavior. Automated checks are not a full
 WCAG certification or real-device audit.
 
-GitHub CI also audits dependencies. Both `quality` and `browser-regression` must
-pass before merging. PRs use regular merge commits; squash and rebase are disabled.
+GitHub CI runs on PRs targeting `main` and their updates, on pushes to `main`,
+and manually through **Actions → Website CI → Run workflow**. Pushes to working
+branches alone do not trigger CI; open a PR or run it manually to check a branch.
+The manual-run button becomes available once this workflow is on `main`.
+Every run includes the full browser suite and a dependency audit. Both `quality`
+and `browser-regression` must pass before merging. PRs use regular merge commits;
+squash and rebase are disabled.
 Reports/traces are public and retained for seven days; test only public content.
 
 ## Cloudflare Pages deployment
