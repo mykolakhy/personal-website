@@ -226,6 +226,7 @@ h3 { font-size: 24px; line-height: 1.3; }
 .ai-providers { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
 .claude-coverage { margin-top: 28px; padding: 16px 20px; border-left: 3px solid var(--accent); background: var(--bg-surface); }
 .claude-coverage .ai-stats-note:first-child { margin-top: 0; }
+.claude-coverage time { white-space: nowrap; }
 .claude-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .claude-models { margin: 0 0 32px; }
 .claude-models h3 { font-size: 18px; }

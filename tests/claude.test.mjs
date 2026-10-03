@@ -8,7 +8,7 @@ import { collectClaudeStats, saveClaudeStats } from '../scripts/collect-claude-s
 import { claudeEnglish, renderClaudeStats } from '../scripts/claude-section.mjs';
 import { publishAIStats } from '../scripts/publish-ai-stats.mjs';
 import { publicSourceBytes } from '../scripts/build.mjs';
-import { readCatalogs, renderPage } from '../scripts/i18n.mjs';
+import { readCatalogs, renderPage, escapeHTML } from '../scripts/i18n.mjs';
 
 const now = new Date('2026-10-03T12:00:00.000Z');
 const raw = () => ({ version: 5, lastComputedDate: '2026-09-30', firstSessionDate: '2026-08-13T17:55:41.457Z', totalSessions: 2, modelUsage: { 'claude-sonnet-5': { inputTokens: 10, outputTokens: 20, cacheReadInputTokens: 1000, cacheCreationInputTokens: 100, costUSD: 123 } }, dailyActivity: [{ date: '2026-08-13', sessionCount: 2, messageCount: 12, toolCallCount: 4 }, { date: '2026-09-30', sessionCount: 0, messageCount: 1, toolCallCount: 1 }], longestSession: { sessionId: 'PRIVATE-ID', duration: 999999999 }, dailyModelTokens: [{ date: '2026-09-30', tokensByModel: { 'private-model': 9999 } }], messages: ['PRIVATE-PROMPT'], projectPath: '/PRIVATE-PROJECT', accessToken: 'PRIVATE-TOKEN' });
@@ -106,4 +106,29 @@ test('combined publication uploads only the two aggregates and triggers one main
   assert.equal(calls.filter(args => args[0] === 'workflow').length, 1);
   assert.ok(calls.at(-1).includes('main'));
   assert.doesNotMatch(JSON.stringify(calls), /stats-cache|auth.json|\.claude|git push/);
+});
+
+test('public AI copy identifies the owner, keeps local scope in the disclosure and shows coverage only once', async () => {
+  const sources = await publicSourceBytes(), template = sources.get('index.html').toString('utf8'), catalogs = readCatalogs(template, sources);
+  const ai = JSON.parse(sources.get('data/ai-stats.json').toString('utf8'));
+  const labels = { en: 'Claude Code activity', uk: 'Активність Claude Code', it: 'Attività con Claude Code', de: 'Aktivität mit Claude Code' };
+  for (const [code, label] of Object.entries(labels)) {
+    const catalog = catalogs.get(code);
+    const html = renderPage(template, code, catalog, null, ai, { page: 'ai', sources, claudeSnapshot: saved });
+    const section = html.match(/<section id="claude-activity"([\s\S]*?)<\/section>/)[1];
+    const mainCopy = section.replace(/<details\b[\s\S]*?<\/details>/, '');
+    assert.ok(mainCopy.includes(label));
+    assert.ok(mainCopy.includes(escapeHTML(catalog['claudeStats.intro'])));
+    assert.ok(section.includes(escapeHTML(catalog['claudeStats.method'])));
+    assert.doesNotMatch(mainCopy, /this Mac|цей Mac|questo Mac|dieser Mac|Cache computed|Кеш обчислено|Cache calcolata|Cache berechnet/);
+    assert.equal([...section.matchAll(new RegExp(`datetime="${saved.computedThrough}"`, 'g'))].length, 1);
+    assert.ok(section.includes(`data-claude-through datetime="${saved.computedThrough}"`));
+    assert.ok(section.includes(`datetime="${saved.updatedAt}"`));
+    const unit = escapeHTML(catalog['claudeStats.sessionsUnit']);
+    assert.ok(section.includes(`aria-valuetext="${unit}: `));
+    const openAI = html.match(/<section id="ai-activity"([\s\S]*?)<\/section>/)[1];
+    assert.doesNotMatch(openAI, /Current month|Поточний місяць|Mese corrente|Aktueller Monat/);
+    assert.ok(openAI.includes(escapeHTML(catalog['aiStats.monthlyNote'])));
+    assert.ok(html.includes(escapeHTML(catalog['meta.aiDescription'])));
+  }
 });

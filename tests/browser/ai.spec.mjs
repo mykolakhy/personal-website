@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 const snapshot = JSON.parse(await readFile('data/ai-stats.json', 'utf8'));
 const titles = { en: 'AI, in numbers.', uk: 'ШІ у цифрах.', it: 'L’IA, in numeri.', de: 'KI in Zahlen.' };
 const claude = JSON.parse(await readFile('data/claude-stats.json', 'utf8'));
+const claudeLabels = { en: 'Claude Code activity', uk: 'Активність Claude Code', it: 'Attività con Claude Code', de: 'Aktivität mit Claude Code' };
 
 for (const code of Object.keys(titles)) for (const theme of ['light', 'dark']) for (const width of [320, 768, 1440]) {
   test(`${code} AI statistics in ${theme} at ${width}px show exact local data without overflow`, async ({ page }) => {
@@ -66,6 +67,8 @@ for (const code of Object.keys(titles)) for (const theme of ['light', 'dark']) f
     await page.goto((code === 'en' ? '/ai/' : `/${code}/ai/`) + '#claude-activity');
     const section = page.locator('#claude-activity');
     await expect(section.getByRole('heading', { name: 'Claude Code.', exact: true })).toBeVisible();
+    await expect(section.locator('.eyebrow')).toHaveText(claudeLabels[code]);
+    await expect(section.locator('.claude-coverage p')).toHaveCount(1);
     for (const [key, value] of Object.entries(claude.summary)) await expect(section.locator(`[data-claude-metric="${key}"] data`)).toHaveAttribute('value', String(value));
     await expect(section.locator('[data-claude-through]')).toHaveAttribute('datetime', claude.computedThrough);
     await expect(section.locator('.ai-stats-updated time')).toHaveAttribute('datetime', claude.updatedAt);

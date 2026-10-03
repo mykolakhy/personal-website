@@ -1,30 +1,29 @@
 import { validateClaudeSnapshot, claudeSummaryKeys } from './claude-data.mjs';
 
 export const claudeEnglish = {
-  'claudeStats.label': 'Local activity · this Mac',
+  'claudeStats.label': 'Claude Code activity',
   'claudeStats.title': 'Claude Code.',
-  'claudeStats.intro': 'Locally recorded sessions, tokens, and activity. Not an account-wide Claude total.',
-  'claudeStats.coverage': 'Recorded coverage',
-  'claudeStats.through': 'Cache computed through',
-  'claudeStats.collected': 'Snapshot collected',
-  'claudeStats.models': 'Recorded models',
-  'claudeStats.sessions': 'Recorded sessions',
-  'claudeStats.activeDays': 'Days with recorded activity',
-  'claudeStats.inputTokens': 'Input tokens · non-cached',
+  'claudeStats.intro': 'Sessions, tokens, and active days from my work with Claude Code.',
+  'claudeStats.coverage': 'Period covered',
+  'claudeStats.collected': 'Snapshot retrieved',
+  'claudeStats.models': 'Models used',
+  'claudeStats.sessions': 'Sessions',
+  'claudeStats.activeDays': 'Active days',
+  'claudeStats.inputTokens': 'Input tokens · uncached',
   'claudeStats.outputTokens': 'Output tokens',
-  'claudeStats.cacheReadInputTokens': 'Input tokens read from cache',
-  'claudeStats.cacheCreationInputTokens': 'Input tokens written to cache',
-  'claudeStats.monthlyTitle': 'Local activity by month',
-  'claudeStats.monthlyNote': '12 calendar months ending at the cache coverage date. Bars show recorded session starts; active days also include activity in ongoing sessions. Months before recorded coverage are unavailable, not zero.',
-  'claudeStats.partial': 'Partial coverage',
-  'claudeStats.sessionsUnit': 'recorded sessions',
-  'claudeStats.note': 'Cache tokens are shown separately. These counters are not directly comparable with the ChatGPT / Codex total and do not measure productivity.',
-  'claudeStats.method': 'This block reads only the aggregate Claude Code cache on one Mac, not conversations or credentials. The cache coverage date and collection time are different: importing a cache does not recalculate it or make old data current. Sessions, token categories and model names come from the cache; active days and month totals use its recorded daily activity. Activity on other devices or in Claude.ai is not included. Missing local history may make coverage incomplete. No task names, session IDs, messages, project paths, costs or unverified duration metrics are published.',
-  'claudeStats.unavailable': 'Local Claude Code statistics are currently unavailable.',
+  'claudeStats.cacheReadInputTokens': 'Input tokens · read from cache',
+  'claudeStats.cacheCreationInputTokens': 'Input tokens · written to cache',
+  'claudeStats.monthlyTitle': 'Activity by month',
+  'claudeStats.monthlyNote': '12 calendar months up to the end of the period shown. Bars show session starts. Months outside the recorded period have no data, not zero activity.',
+  'claudeStats.partial': 'Partial month',
+  'claudeStats.sessionsUnit': 'Session starts',
+  'claudeStats.note': 'An activity snapshot, not a measure of productivity. Token categories differ from ChatGPT / Codex, so the totals are not directly comparable.',
+  'claudeStats.method': 'These figures cover my Claude Code activity recorded on one computer, not my entire Claude account. Activity on other devices or in Claude.ai is excluded, and missing local history can leave gaps. Sessions, token counts, and model names come from the local aggregate cache; active days and monthly session starts are calculated from its daily activity. Active days include ongoing sessions. Input, output, cache-read, and cache-write tokens are separate categories. The period shown ends at the cache’s last calculation; retrieving a snapshot does not recalculate it or make older data current. Conversations, task names, session IDs, project paths, costs, credentials, and unverified duration metrics are not published.',
+  'claudeStats.unavailable': 'Claude Code statistics are currently unavailable.',
 };
 const escape = value => String(value).replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 
-export function renderClaudeStats(snapshot, code, catalog = { ...claudeEnglish, 'aiStats.noData': 'Unavailable', 'aiStats.methodTitle': 'About these numbers' }) {
+export function renderClaudeStats(snapshot, code, catalog = { ...claudeEnglish, 'aiStats.noData': 'No data', 'aiStats.methodTitle': 'About these numbers' }) {
   const text = key => escape(catalog[`claudeStats.${key}`]);
   if (!snapshot) return `<p class="ai-stats-note">${text('unavailable')}</p>`;
   validateClaudeSnapshot(snapshot);
@@ -43,10 +42,10 @@ export function renderClaudeStats(snapshot, code, catalog = { ...claudeEnglish, 
     const label = new Intl.DateTimeFormat(code, { month: 'short', timeZone: 'UTC' }).format(new Date(`${month.month}-01T00:00:00.000Z`));
     const last = new Date(Date.UTC(Number(month.month.slice(0, 4)), Number(month.month.slice(5)), 0)).getUTCDate();
     const partial = month.sessions !== null && ((month.month === snapshot.coverageStart.slice(0, 7) && Number(snapshot.coverageStart.slice(8)) > 1) || (month.month === snapshot.computedThrough.slice(0, 7) && Number(snapshot.computedThrough.slice(8)) < last));
-    return `<div class="ai-month" data-claude-month="${month.month}"><dt><time datetime="${month.month}">${escape(label)} <span class="ai-month-year">${month.month.slice(0, 4)}</span></time>${partial ? `<span class="ai-month-partial">${text('partial')}</span>` : ''}</dt><dd class="ai-month-count${month.sessions === null ? ' ai-month-unavailable' : ''}">${month.sessions === null ? escape(catalog['aiStats.noData']) : count(month.sessions, 'data-claude-month-sessions')}</dd><dd class="ai-month-days">${text('activeDays')}: <span>${month.activeDays === null ? '—' : number(month.activeDays)}</span></dd>${month.sessions === null ? '' : `<dd class="ai-month-bar"><meter min="0" max="${maximum}" value="${month.sessions}" aria-label="${escape(`${label} ${month.month.slice(0, 4)}`)}" aria-valuetext="${escape(number(month.sessions))} ${text('sessionsUnit')}">${number(month.sessions)}</meter></dd>`}</div>`;
+    return `<div class="ai-month" data-claude-month="${month.month}"><dt><time datetime="${month.month}">${escape(label)} <span class="ai-month-year">${month.month.slice(0, 4)}</span></time>${partial ? `<span class="ai-month-partial">${text('partial')}</span>` : ''}</dt><dd class="ai-month-count${month.sessions === null ? ' ai-month-unavailable' : ''}">${month.sessions === null ? escape(catalog['aiStats.noData']) : count(month.sessions, 'data-claude-month-sessions')}</dd><dd class="ai-month-days">${text('activeDays')}: <span>${month.activeDays === null ? '—' : number(month.activeDays)}</span></dd>${month.sessions === null ? '' : `<dd class="ai-month-bar"><meter min="0" max="${maximum}" value="${month.sessions}" aria-label="${escape(`${label} ${month.month.slice(0, 4)}`)}" aria-valuetext="${text('sessionsUnit')}: ${escape(number(month.sessions))}">${number(month.sessions)}</meter></dd>`}</div>`;
   }).join('');
   const collected = new Intl.DateTimeFormat(code, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'UTC' }).format(new Date(snapshot.updatedAt));
-  return `<div class="claude-coverage"><p class="ai-stats-note">${text('coverage')}: <time datetime="${snapshot.coverageStart}">${escape(day(snapshot.coverageStart))}</time> — <time datetime="${snapshot.computedThrough}">${escape(day(snapshot.computedThrough))}</time></p><p class="ai-stats-note">${text('through')}: <time data-claude-through datetime="${snapshot.computedThrough}">${escape(day(snapshot.computedThrough))}</time></p></div>
+  return `<div class="claude-coverage"><p class="ai-stats-note">${text('coverage')}: <time datetime="${snapshot.coverageStart}">${escape(day(snapshot.coverageStart))}</time> — <time data-claude-through datetime="${snapshot.computedThrough}">${escape(day(snapshot.computedThrough))}</time></p></div>
         <dl class="ai-stats-metrics claude-metrics">${metrics}</dl>
         <div class="claude-models"><h3>${text('models')}</h3><ul>${snapshot.models.map(model => `<li><code>${escape(model)}</code></li>`).join('')}</ul></div>
         <div class="ai-monthly"><h3>${text('monthlyTitle')}</h3><p class="ai-stats-note">${text('monthlyNote')}</p><dl class="ai-months">${months}</dl></div>

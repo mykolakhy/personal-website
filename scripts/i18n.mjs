@@ -27,7 +27,7 @@ const interfaceEnglish = {
   'meta.projectsTitle': 'Projects — Mykola Khytra',
   'meta.projectsDescription': 'Public projects by Mykola Khytra: tools, source code, GitHub activity, and the tests behind this QA portfolio.',
   'meta.aiTitle': 'AI-assisted QA — Mykola Khytra',
-  'meta.aiDescription': 'How Mykola Khytra uses Claude Code and Codex in QA, with a dated snapshot of profile token usage and monthly activity.',
+  'meta.aiDescription': 'How Mykola Khytra uses Claude Code and Codex for QA, with separate activity snapshots for ChatGPT / Codex and Claude Code.',
   '404.title': 'Page not found — Mykola Khytra',
   '404.heading': 'Page not found',
   '404.body': "This page does not exist. Let's get you back to the portfolio.",
@@ -146,7 +146,7 @@ export function renderNotFound(code, catalog, homeRoot = '/') {
   <title>${text('404.title')}</title>
   <link rel="icon" type="image/svg+xml" href="${root}assets/favicon.svg" />
   <script src="${root}theme.js?v=20261002-1"></script>
-  <link rel="stylesheet" href="${root}styles.css?v=20261003-2" />
+  <link rel="stylesheet" href="${root}styles.css?v=20261003-3" />
 </head>
 <body>
   <header class="site-header"><div class="container header-inner"><a class="wordmark" href="${home}">mykola<span>/</span>qa</a><div class="header-controls">${themeToggle(catalog)}</div></div></header>
