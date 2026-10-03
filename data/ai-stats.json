@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "source": "codex-account-usage",
+  "updatedAt": "2026-10-02T20:25:05.315Z",
+  "summary": {
+    "lifetimeTokens": 2057022996,
+    "peakDailyTokens": 264324130,
+    "longestRunningTurnSec": 63603,
+    "longestStreakDays": 31,
+    "currentStreakDays": 8
+  },
+  "months": [
+    {
+      "month": "2026-10",
+      "tokens": 71011810,
+      "activeDays": 2
+    },
+    {
+      "month": "2026-09",
+      "tokens": 500484534,
+      "activeDays": 25
+    },
+    {
+      "month": "2026-08",
+      "tokens": 1295095542,
+      "activeDays": 30
+    },
+    {
+      "month": "2026-07",
+      "tokens": 73536737,
+      "activeDays": 10
+    },
+    {
+      "month": "2026-06",
+      "tokens": 76084272,
+      "activeDays": 9
+    },
+    {
+      "month": "2026-05",
+      "tokens": 18999442,
+      "activeDays": 8
+    },
+    {
+      "month": "2026-04",
+      "tokens": 21810659,
+      "activeDays": 9
+    },
+    {
+      "month": "2026-03",
+      "tokens": 0,
+      "activeDays": 0
+    },
+    {
+      "month": "2026-02",
+      "tokens": 0,
+      "activeDays": 0
+    },
+    {
+      "month": "2026-01",
+      "tokens": 0,
+      "activeDays": 0
+    },
+    {
+      "month": "2025-12",
+      "tokens": 0,
+      "activeDays": 0
+    },
+    {
+      "month": "2025-11",
+      "tokens": 0,
+      "activeDays": 0
+    }
+  ]
+}

@@ -52,7 +52,7 @@ for (const locale of locales) {
       await page.goto(locale.path);
       await page.evaluate(() => document.fonts.ready);
       await expect(page.locator('html')).toHaveAttribute('lang', locale.code);
-      await expect(page.locator('main section')).toHaveCount(10);
+      await expect(page.locator('main section')).toHaveCount(7);
       await expect(page.locator('h1')).toHaveText('Mykola Khytra.');
       await expect(page.locator('.hero-actions a[download]')).toContainText(locale.cv);
       for (const id of ['ci-case', 'api-case', 'team-case']) await page.locator(`#${id} summary`).click();
@@ -139,7 +139,7 @@ test('all languages and language links work without JavaScript', async ({ browse
   for (const locale of locales) {
     await page.goto('http://127.0.0.1:4180' + locale.path);
     await expect(page.locator('html')).toHaveAttribute('lang', locale.code);
-    await expect(page.locator('main section')).toHaveCount(10);
+    await expect(page.locator('main section')).toHaveCount(7);
     await page.locator('#ci-case summary').click();
     await expect(page.locator('#ci-case')).toHaveAttribute('open', '');
     await page.locator('.language-switcher summary').click();
@@ -156,11 +156,11 @@ test('blocked storage does not prevent language switching', async ({ page }) => 
   await page.addInitScript(() => {
     Object.defineProperty(window, 'localStorage', { get() { throw new DOMException('Storage disabled', 'SecurityError'); } });
   });
-  await page.goto('/it/#writing');
+  await page.goto('/it/#expertise');
   await expect(page.locator('html')).toHaveAttribute('lang', 'it');
   await page.locator('.language-switcher summary').click();
   await page.getByRole('link', { name: 'English', exact: true }).click();
-  await expect(page).toHaveURL(/\/\?lang=en#writing$/);
+  await expect(page).toHaveURL(/\/\?lang=en#expertise$/);
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 });
 

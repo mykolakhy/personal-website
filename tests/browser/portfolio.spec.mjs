@@ -13,14 +13,15 @@ test('all sections, resources and local navigation work without errors', async (
   expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior)).toBe('auto');
   await expect(page.getByText('Up to 4×', { exact: true })).toBeVisible();
   await expect(page.getByText('faster execution for CI jobs', { exact: true })).toBeVisible();
-  await expect(page.locator('main section')).toHaveCount(10);
+  await expect(page.locator('main section')).toHaveCount(7);
   await expect(page.getByRole('heading', { name: 'Manual & product QA', exact: true })).toBeVisible();
   await expect(page.locator('.hero-ai')).toContainText('Claude Code & Codex');
   const links = await page.locator('a[href^="#"]').evaluateAll((links) => links.map((link) => ({ href: link.getAttribute('href'), valid: Boolean(document.getElementById(link.hash.slice(1))) })));
   expect(links.every((link) => link.valid)).toBe(true);
   await page.getByRole('link', { name: 'See the workflow', exact: true }).click();
-  await expect(page).toHaveURL(/#ai-workflow$/);
+  await expect(page).toHaveURL(/\/ai\/#ai-workflow$/);
   await expect(page.locator('#ai-workflow .principle')).toHaveCount(3);
+  await page.getByRole('link', { name: 'Back to portfolio', exact: true }).click();
   await page.getByRole('link', { name: 'Read the CI case' }).click();
   await expect(page.locator('#ci-case')).toHaveAttribute('open', '');
   await expect(page.locator('#ci-case summary')).toBeFocused();
@@ -115,8 +116,9 @@ test('core content and native disclosures work with JavaScript disabled', async 
   await page.goto('http://127.0.0.1:4180/');
   await expect(page.getByRole('heading', { name: 'Manual & product QA', exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'See the workflow', exact: true }).click();
-  await expect(page).toHaveURL(/#ai-workflow$/);
+  await expect(page).toHaveURL(/\/ai\/#ai-workflow$/);
   await expect(page.locator('#ai-workflow')).toContainText('Claude Code and Codex');
+  await page.getByRole('link', { name: 'Back to portfolio', exact: true }).click();
   await page.locator('#ci-case summary').click();
   await expect(page.getByText('Up to four times faster execution across optimized CI jobs, including a runtime reduction from approximately 60 minutes to 15.', { exact: false })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Download CV PDF', exact: true })).toBeVisible();

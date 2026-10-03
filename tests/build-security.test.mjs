@@ -5,8 +5,9 @@ import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { publicFiles } from '../scripts/public-files.mjs';
-import { translationFiles } from '../scripts/i18n.mjs';
+import { translationFiles, pageTemplateFiles } from '../scripts/i18n.mjs';
 import { githubStatsFiles } from '../scripts/github-data.mjs';
+import { aiStatsFiles } from '../scripts/ai-data.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const privateMarker = 'Synthetic private data must never reach the build.\n';
@@ -25,7 +26,7 @@ async function fixture(context, { linkedFile, linkedDirectory, missingFile, dire
     await mkdir(dirname(target), { recursive: true });
     await symlink(privateDirectory, target, 'dir');
   }
-  for (const file of ['scripts/build.mjs', 'scripts/public-files.mjs', 'scripts/i18n.mjs', 'scripts/github-data.mjs', 'scripts/github-section.mjs', ...publicFiles, ...translationFiles, ...githubStatsFiles]) {
+  for (const file of ['scripts/build.mjs', 'scripts/public-files.mjs', 'scripts/i18n.mjs', 'scripts/github-data.mjs', 'scripts/github-section.mjs', 'scripts/ai-data.mjs', 'scripts/ai-section.mjs', ...publicFiles, ...pageTemplateFiles, ...translationFiles, ...githubStatsFiles, ...aiStatsFiles]) {
     if (file === missingFile) continue;
     const target = resolve(source, file);
     await mkdir(dirname(target), { recursive: true });
@@ -58,6 +59,9 @@ for (const [name, options] of [
   ['translation directory linked outside the source tree', { linkedDirectory: 'locales' }],
   ['GitHub snapshot linked to private data', { linkedFile: 'data/github-stats.json' }],
   ['GitHub snapshot directory linked outside the source tree', { linkedDirectory: 'data' }],
+  ['secondary page template linked to private data', { linkedFile: 'pages/ai.html' }],
+  ['secondary page directory linked outside the source tree', { linkedDirectory: 'pages' }],
+  ['AI snapshot linked to private data', { linkedFile: 'data/ai-stats.json' }],
 ]) {
   test(`build rejects ${name} before creating output`, async (context) => {
     const { build, destination } = await fixture(context, options);
@@ -96,6 +100,18 @@ test('invalid GitHub snapshot leaves an existing build unchanged', async context
   await mkdir(destination);
   await writeFile(resolve(destination, 'index.html'), 'Previously built public content.');
   await assert.rejects(build(), /Invalid public GitHub snapshot/);
+  assert.equal(await readFile(resolve(destination, 'index.html'), 'utf8'), 'Previously built public content.');
+  assert.deepEqual(await readdir(destination), ['index.html']);
+});
+
+test('AI snapshots with private fields are rejected before changing output', async context => {
+  const { source, build, destination } = await fixture(context);
+  const snapshot = JSON.parse(await readFile(resolve(source, 'data/ai-stats.json'), 'utf8'));
+  snapshot.threadUsage = [{ title: privateMarker }];
+  await writeFile(resolve(source, 'data/ai-stats.json'), JSON.stringify(snapshot));
+  await mkdir(destination);
+  await writeFile(resolve(destination, 'index.html'), 'Previously built public content.');
+  await assert.rejects(build(), /Invalid public AI snapshot/);
   assert.equal(await readFile(resolve(destination, 'index.html'), 'utf8'), 'Previously built public content.');
   assert.deepEqual(await readdir(destination), ['index.html']);
 });

@@ -19,16 +19,16 @@
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
   <link rel="preload" href="./assets/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
   <script src="./theme.js?v=20261002-1"></script>
-  <link rel="stylesheet" href="./styles.css?v=20261002-5" />
+  <link rel="stylesheet" href="./styles.css?v=20261003-1" />
   <!-- Production metadata is added by the build when a real URL is configured. -->
 </head>
 <body>
   <a data-i18n="skip" class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
     <div class="container header-inner">
-      <a class="wordmark" href="#top" data-i18n-aria-label="homeLabel" aria-label="Mykola Khytra home">mykola<span>/</span>qa</a>
-      <nav class="site-nav" data-i18n-aria-label="navLabel" aria-label="Primary navigation"><a data-i18n="nav.work" href="#work">Work</a><a data-i18n="nav.topics" href="#writing">Topics</a><a data-i18n="contact.label" href="#contact">Contact</a></nav>
-      <a class="header-status" href="#contact"><span class="status-dot" aria-hidden="true"></span><span data-i18n="status">Open to senior QA roles</span></a>
+      <a class="wordmark" data-route="home" href="#top" data-i18n-aria-label="homeLabel" aria-label="Mykola Khytra home">mykola<span>/</span>qa</a>
+      <nav class="site-nav" data-i18n-aria-label="navLabel" aria-label="Primary navigation"><a data-i18n="nav.work" data-route="home" href="#work">Work</a><!-- secondary-page-navigation --><a data-i18n="contact.label" data-route="home" href="#contact">Contact</a></nav>
+      <a class="header-status" data-route="home" href="#contact"><span class="status-dot" aria-hidden="true"></span><span data-i18n="status">Open to senior QA roles</span></a>
       <div class="header-controls">
         <!-- theme-toggle -->
         <!-- /theme-toggle -->
@@ -42,13 +42,21 @@
       <div class="container hero-inner">
         <p class="eyebrow"><span class="signal-mark" aria-hidden="true"></span><span data-i18n="location">Kraków, Poland</span></p>
         <h1 id="hero-title">Mykola Khytra.</h1>
-        <p data-i18n="hero.tagline" class="hero-tagline">Senior QA Engineer who makes releases boring.</p>
-        <p data-i18n="hero.lede" class="hero-lede">Manual, API, and automated testing. Product risks, exploratory testing, and confident release decisions.</p>
-        <p class="hero-ai"><span data-i18n="ai.label" class="mono-label">AI-assisted QA</span> <span data-i18n="hero.ai">Claude Code &amp; Codex for test design, debugging, and documentation.</span> <a href="#ai-workflow"><span data-i18n="hero.workflow">See the workflow</span> <span aria-hidden="true">→</span></a></p>
-        <div class="hero-actions">
-          <a class="button button-primary" href="#work"><span data-i18n="hero.work">Explore the work</span> <span aria-hidden="true">→</span></a>
-          <a class="button button-secondary" href="./assets/downloads/mykola-khytra-cv.pdf" download><span data-i18n="hero.cv">Download CV</span> <span class="file-label">PDF</span></a>
-          <a class="text-link" href="#contact"><span data-i18n="hero.talk">Let’s talk</span> <span aria-hidden="true">↗</span></a>
+        <div class="hero-body">
+          <div class="hero-copy">
+            <p data-i18n="hero.tagline" class="hero-tagline">Senior QA Engineer who makes releases boring.</p>
+            <p data-i18n="hero.lede" class="hero-lede">Manual, API, and automated testing. Product risks, exploratory testing, and confident release decisions.</p>
+            <p class="hero-ai"><span data-i18n="ai.label" class="mono-label">AI-assisted QA</span> <span data-i18n="hero.ai">Claude Code &amp; Codex for test design, debugging, and documentation.</span> <a data-route="ai" href="./ai/#ai-workflow"><span data-i18n="hero.workflow">See the workflow</span> <span aria-hidden="true">→</span></a></p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="#work"><span data-i18n="hero.work">Explore the work</span> <span aria-hidden="true">→</span></a>
+              <a class="button button-secondary" href="./assets/downloads/mykola-khytra-cv.pdf" download><span data-i18n="hero.cv">Download CV</span> <span class="file-label">PDF</span></a>
+              <a class="text-link" href="#contact"><span data-i18n="hero.talk">Let’s talk</span> <span aria-hidden="true">↗</span></a>
+            </div>
+          </div>
+          <nav class="hero-navigation" aria-label="More to explore" data-i18n-aria-label="page.more">
+            <a class="button button-secondary" data-route="projects" href="./projects/"><span data-i18n="nav.projects">Projects</span><span aria-hidden="true">→</span></a>
+            <a class="button button-secondary" data-route="ai" href="./ai/"><span data-i18n="nav.ai">AI</span><span aria-hidden="true">→</span></a>
+          </nav>
         </div>
         <div class="proof-grid" data-i18n-aria-label="proofLabel" aria-label="Professional highlights">
           <div class="stat"><strong>5+</strong><span data-i18n="proof.years">years in QA</span></div>
@@ -81,16 +89,6 @@
           <article class="tool-group"><h3 data-i18n="expertise.manual">Manual &amp; product QA</h3><p data-i18n="expertise.manualBody">Exploratory, functional, smoke, and regression testing. Test design, clear defect reports, and release validation.</p><div class="tag-list"><span data-i18n="tag.strategy" class="tag">Test strategy</span><span class="tag">TestRail</span><span class="tag">Testomat</span></div></article>
           <article class="tool-group"><h3 data-i18n="expertise.api">API &amp; integration QA</h3><p data-i18n="expertise.apiBody">API and WebSocket testing, business rules, error handling, and defect investigation. Jest, Vitest, and Axios for automated API checks.</p><div class="tag-list"><span class="tag">Postman</span><span class="tag">Swagger</span><span class="tag">REST APIs</span><span class="tag">Axios</span><span class="tag">Jest</span><span class="tag">Vitest</span></div></article>
           <article class="tool-group"><h3 data-i18n="expertise.automation">Automation &amp; delivery</h3><p data-i18n="expertise.automationBody">UI automation with Playwright and TypeScript. Reusable test code, faster CI feedback, and failure diagnostics.</p><div class="tag-list"><span class="tag">Playwright</span><span class="tag">TypeScript</span><span class="tag">JavaScript</span><span class="tag">CircleCI</span><span class="tag">GitHub Actions</span><span class="tag">Git</span><span class="tag">Datadog</span></div></article>
-        </div>
-      </div>
-    </section>
-    <section id="ai-workflow" class="section section-rule" aria-labelledby="ai-title">
-      <div class="container">
-        <div class="section-heading-row"><div><p data-i18n="ai.label" class="eyebrow">AI-assisted QA</p><h2 data-i18n="ai.title" id="ai-title">Practical AI.<br /> Verified results.</h2></div><p data-i18n="ai.intro" class="section-intro">Daily use of Claude Code and Codex for repository analysis, test design, automation code, debugging, and documentation.</p></div>
-        <div class="principles-grid">
-          <article class="principle"><span data-i18n="ai.exploreLabel" class="principle-icon" aria-hidden="true">01 / EXPLORE</span><h3 data-i18n="ai.exploreTitle">Understand the context</h3><p data-i18n="ai.exploreBody">Explore repositories, develop test ideas, and investigate failures with AI assistance. Product risks and existing behavior guide the questions.</p></article>
-          <article class="principle"><span data-i18n="ai.draftLabel" class="principle-icon" aria-hidden="true">02 / DRAFT</span><h3 data-i18n="ai.draftTitle">Build and improve</h3><p data-i18n="ai.draftBody">Draft and maintain test code, refactor shared utilities, and prepare documentation. Use agents to support repeatable QA work and problem analysis.</p></article>
-          <article class="principle"><span data-i18n="ai.verifyLabel" class="principle-icon" aria-hidden="true">03 / VERIFY</span><h3 data-i18n="ai.verifyTitle">Check the result</h3><p data-i18n="ai.verifyBody">Review proposed changes, run relevant checks, and verify behavior manually where needed. Technical judgment stays with the engineer.</p></article>
         </div>
       </div>
     </section>
@@ -152,12 +150,6 @@
         </div>
       </div>
     </section>
-    <section id="github" class="section section-rule" aria-labelledby="github-title">
-      <div class="container">
-        <div class="section-heading-row"><div><p data-i18n="github.label" class="eyebrow">GitHub / public projects</p><h2 data-i18n="github.title" id="github-title">Code you can explore.</h2><a class="text-link" href="https://github.com/mykolakhy" target="_blank" rel="noopener noreferrer"><span data-i18n="github.profile">Explore my GitHub</span><span aria-hidden="true">↗</span><span data-i18n="github.newTab" class="sr-only">(opens in a new tab)</span></a></div><p data-i18n="github.intro" class="section-intro">Personal tools and experiments, with public activity and the checks behind this site.</p></div>
-        <!-- github-data --><p>Public activity is available on GitHub.</p><!-- /github-data -->
-      </div>
-    </section>
     <section class="section section-rule" aria-labelledby="experience-title">
       <div class="container section-heading-row">
         <div><p data-i18n="experience.label" class="eyebrow">Experience</p><h2 data-i18n="experience.title" id="experience-title">Across the QA<br /> lifecycle.</h2><a class="text-link experience-cv" href="./assets/downloads/mykola-khytra-cv.pdf" download><span data-i18n="experience.cv">Full experience in my CV</span> <span class="file-label">PDF</span></a></div>
@@ -169,23 +161,12 @@
         </ol>
       </div>
     </section>
-    <section class="section section-rule" aria-labelledby="approach-title">
+    <section id="explore" class="section section-rule" aria-labelledby="explore-title">
       <div class="container">
-        <p data-i18n="approach.label" class="eyebrow">How I work</p><h2 data-i18n="approach.title" id="approach-title">Evidence over opinion.</h2>
-        <div class="principles-grid">
-          <article class="principle"><span class="principle-icon" aria-hidden="true">01</span><h3 data-i18n="approach.riskTitle">Risk first</h3><p data-i18n="approach.riskBody">Start with what can hurt users or the business, not only what is easiest to automate.</p></article>
-          <article class="principle"><span class="principle-icon" aria-hidden="true">02</span><h3 data-i18n="approach.failTitle">Make failures useful</h3><p data-i18n="approach.failBody">A failed check needs enough context to reproduce, investigate, and decide what to do next.</p></article>
-          <article class="principle"><span class="principle-icon" aria-hidden="true">03</span><h3 data-i18n="approach.maintainTitle">Leave it maintainable</h3><p data-i18n="approach.maintainBody">Clear fixtures, documentation, and a debuggable pipeline matter after the original author moves on.</p></article>
-        </div>
-      </div>
-    </section>
-    <section id="writing" class="section section-rule" aria-labelledby="writing-title">
-      <div class="container writing-grid">
-        <div><p data-i18n="topics.label" class="eyebrow">Engineering notes</p><h2 data-i18n="topics.title" id="writing-title">Three things<br /> worth asking.</h2><p data-i18n="topics.intro" class="section-intro notes-intro">Practical ideas behind everyday quality decisions.</p></div>
-        <div class="writing-list">
-          <article class="writing-item"><p data-i18n="topics.qualityLabel" class="mono-label">Quality engineering</p><h3 data-i18n="topics.testTitle">Is this test worth keeping?</h3><p data-i18n="topics.testBody">A useful check protects an important behavior and produces a failure someone can act on. If it is flaky or costly to maintain, fix its foundations or reconsider what it is testing. A bigger suite is not automatically a better one.</p></article>
-          <article class="writing-item"><p data-i18n="topics.exploreLabel" class="mono-label">Exploratory testing</p><h3 data-i18n="topics.exploreTitle">What does a script miss?</h3><p data-i18n="topics.exploreBody">Exploratory sessions follow questions: where do users get stuck, which assumptions fail, and how does the product handle unusual states? Findings become reproducible defects, new test ideas, or candidates for automation.</p></article>
-          <article class="writing-item"><p class="mono-label">CI/CD</p><h3 data-i18n="topics.greenTitle">What does green actually mean?</h3><p data-i18n="topics.greenBody">Only that the checks which ran passed. Trust also depends on what they cover, what was skipped, how failures are investigated, and whether the result arrived soon enough to influence a decision.</p></article>
+        <div class="section-heading-row"><div><p data-i18n="explore.label" class="eyebrow">Explore further</p><h2 data-i18n="explore.title" id="explore-title">Projects and AI,<br /> in practice.</h2></div><p data-i18n="explore.intro" class="section-intro">A closer look at the tools, experiments, and workflows behind the work.</p></div>
+        <div class="explore-grid">
+          <article id="github" class="card explore-card"><h3 data-i18n="explore.projectsTitle">Public projects</h3><p data-i18n="explore.projectsBody">Personal tools and experiments, source code, GitHub activity, and the checks behind this site.</p><a class="text-link" data-route="projects" href="./projects/"><span data-i18n="page.projects">Explore the projects</span><span aria-hidden="true">→</span></a></article>
+          <article id="ai-activity" class="card explore-card"><span id="ai-workflow" class="anchor-alias" aria-hidden="true"></span><h3 data-i18n="explore.aiTitle">AI-assisted work</h3><p data-i18n="explore.aiBody">How Claude Code and Codex support everyday QA, with a dated snapshot of profile activity.</p><a class="text-link" data-route="ai" href="./ai/"><span data-i18n="page.ai">Explore my AI workflow</span><span aria-hidden="true">→</span></a></article>
         </div>
       </div>
     </section>
@@ -202,6 +183,6 @@
     </section>
   </main>
   <footer class="site-footer"><div class="container footer-inner"><span>mykola/qa</span><span data-i18n="footer.role">Senior QA Engineer · Kraków, Poland</span><span>© 2026 Mykola Khytra</span></div></footer>
-  <script src="./app.js?v=20261002-4" defer></script>
+  <script src="./app.js?v=20261002-5" defer></script>
 </body>
 </html>

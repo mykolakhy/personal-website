@@ -9,7 +9,8 @@ import { publicFiles } from '../scripts/public-files.mjs';
 import { build, productionURL } from '../scripts/build.mjs';
 import { pagesSiteURL } from '../scripts/build-pages.mjs';
 import { websiteServer } from '../scripts/serve.mjs';
-import { renderPage, generatedPages, languages } from '../scripts/i18n.mjs';
+import { renderPage, generatedPages, languages, pages, readCatalogs } from '../scripts/i18n.mjs';
+import { publicSourceBytes } from '../scripts/build.mjs';
 
 // Keep existing English copy regressions independent of translation wrappers.
 const html = renderPage(await readFile('index.html', 'utf8'), 'en');
@@ -29,10 +30,13 @@ test('positioning covers manual, general and automation QA before the case studi
 });
 
 test('AI positioning describes practical agent workflows without unverified expertise or results', async () => {
-  const workflow = html.match(/<section id="ai-workflow"([\s\S]*?)<\/section>/)?.[1];
+  const sources = await publicSourceBytes();
+  const template = sources.get('index.html').toString('utf8');
+  const ai = renderPage(template, 'en', readCatalogs(template, sources).get('en'), null, null, { page: 'ai', sources });
+  const workflow = ai.match(/<section id="ai-workflow"([\s\S]*?)<\/section>/)?.[1];
   assert.ok(workflow, 'AI workflow exists');
   for (const phrase of ['Claude Code and Codex', 'repository analysis', 'test design', 'Understand the context', 'Build and improve', 'Check the result', 'verify behavior manually']) assert.ok(workflow.includes(phrase), phrase);
-  assert.match(html, /href="#ai-workflow"><span>See the workflow/);
+  assert.match(html, /href="\.\/ai\/#ai-workflow"><span>See the workflow/);
   assert.match(css, /html \{ scroll-behavior: auto;/, 'anchor navigation must not race with disclosure scrolling');
   const description = html.match(/<meta name="description" content="([^"]+)"/)[1];
   assert.match(description, /Manual, API, and automated testing/);
@@ -83,11 +87,11 @@ test('local links, anchors, IDs and referenced resources are valid', async () =>
   urls.push(...[...css.matchAll(/url\("([^"]+)"\)/g)].map((match) => match[1]));
   for (const url of urls) {
     if (url.startsWith('#')) assert.ok(ids.includes(url.slice(1)), url);
-    if (url.startsWith('./')) assert.ok(publicFiles.includes(url.slice(2).split('?')[0]) || languages.some(({ path }) => url === `./${path}${path ? '' : '?lang=en'}`), url);
+    if (url.startsWith('./')) assert.ok(publicFiles.includes(url.slice(2).split('?')[0]) || languages.some(({ path }) => pages.some(page => url === `./${path}${page.path}${path ? '' : '?lang=en'}` || url.split('#')[0] === `./${path}${page.path}`)), url);
   }
   for (const file of publicFiles) assert.ok((await stat(file)).isFile(), file);
   assert.equal([...html.matchAll(/<h1\b/g)].length, 1);
-  assert.match(html, /<html lang="en">/);
+  assert.match(html, /<html lang="en" data-page="home">/);
   assert.doesNotMatch(html + css, /fonts\.googleapis|fonts\.gstatic|avatar\.png|text-overflow: ellipsis|Available to start immediately/);
 });
 

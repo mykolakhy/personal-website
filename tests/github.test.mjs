@@ -100,7 +100,7 @@ test('every language renders accessible static data, projects and CI without unt
   const catalogs = readCatalogs(template, sources);
   for (const code of ['en', 'uk', 'it', 'de']) {
     const catalog = catalogs.get(code);
-    const html = renderPage(template, code, catalog, saved);
+    const html = renderPage(template, code, catalog, saved, null, { page: 'projects', sources });
     assert.equal([...html.matchAll(/data-date="/g)].length, saved.days.length);
     assert.equal([...html.matchAll(/data-repository="/g)].length, 3);
     assert.ok(html.includes(catalog['github.note']));

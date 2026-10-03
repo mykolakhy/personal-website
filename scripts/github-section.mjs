@@ -23,6 +23,7 @@ export const githubEnglish = {
   'github.monthlyNote': 'The 12 most recent calendar months, including the current partial month. The calendar above uses GitHub’s full rolling-year range. The bars compare contribution counts between these months.',
   'github.currentMonth': 'Current month · partial',
   'github.projects': 'Selected repositories',
+  'github.activityTitle': 'GitHub activity',
   'github.personalType': 'QA portfolio',
   'github.personalBody': 'This four-language portfolio: accessible theme and language controls, browser regression tests, and a protected delivery workflow.',
   'github.pixelType': 'Desktop tool',
@@ -98,7 +99,8 @@ export function renderGithub(snapshot, code, catalog = githubEnglish) {
     return `<article class="card github-project" data-repository="${project.name}"><p class="mono-label">${text(spec.type)}</p><h3>${spec.title}</h3><p>${text(spec.body)}</p><div class="tag-list">${spec.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</div><p class="github-project-date">${text('pushed')}: ${time(project.pushedAt)}</p>${link(`https://github.com/mykolakhy/${project.name}`, text('source'))}</article>`;
   }).join('');
   const ci = snapshot.ci;
-  return `<dl class="github-metrics">${metrics}</dl>
+  return `${projects ? `<h2 class="github-subheading">${text('projects')}</h2><div class="github-projects">${projects}</div>` : ''}
+        <h2 class="github-subheading github-activity-heading">${text('activityTitle')}</h2><dl class="github-metrics">${metrics}</dl>
         <figure class="github-calendar"><figcaption><span>${text('period')}</span><span>${time(snapshot.from)} – ${time(snapshot.to)}</span></figcaption>
           <div class="calendar-scroll" tabindex="0" role="group" aria-label="${text('calendar')}"><div class="calendar-grid" aria-hidden="true">${weeks.join('')}</div></div>
           <div class="calendar-legend" aria-hidden="true"><span>${text('less')}</span>${[0, 1, 2, 3, 4].map(level => `<span class="calendar-day" data-level="${level}"></span>`).join('')}<span>${text('more')}</span></div>
@@ -108,7 +110,6 @@ export function renderGithub(snapshot, code, catalog = githubEnglish) {
         <div class="github-disclosures"><details><summary><span>${text('methodTitle')}</span><span class="disclosure-mark" aria-hidden="true">+</span></summary><div class="detail-body"><p>${text('method')}</p></div></details>
           <details class="github-monthly"><summary><span>${text('monthlyTitle')}</span><span class="disclosure-mark" aria-hidden="true">+</span></summary><div class="detail-body"><p>${text('monthlyNote')}</p><dl class="github-months">${monthly}</dl></div></details>
         </div>
-        ${projects ? `<h3 class="github-subheading">${text('projects')}</h3><div class="github-projects">${projects}</div>` : ''}
         <div class="github-quality"><div><h3>${text('qualityTitle')}</h3><p>${text('qualityBody')}</p><ul class="github-checks">${['browsers', 'responsive', 'accessibility', 'boundaries'].map(key => `<li>${text(key)}</li>`).join('')}</ul></div>
           <div class="github-ci"><p class="mono-label">${text('ciLabel')}</p><p class="github-ci-state" data-conclusion="${ci?.conclusion ?? 'unavailable'}">${ci?.conclusion === 'success' ? '<span class="status-dot" aria-hidden="true"></span>' : ''}<strong>${ci ? text(`ci.${ci.conclusion}`) : text('ciUnavailable')}</strong></p>${ci ? `<p>${time(ci.completedAt)} · <code>main / ${ci.sha.slice(0, 7)}</code></p>${link(`https://github.com/mykolakhy/personal-website/actions/runs/${ci.id}`, text('ciLink'))}` : link('https://github.com/mykolakhy/personal-website/actions/workflows/ci.yml', text('actions'))}<p class="github-note">${text('qualityNote')}</p></div>
         </div>`;
