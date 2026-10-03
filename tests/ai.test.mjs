@@ -8,7 +8,7 @@ import { readAccountUsage, saveAIStats } from '../scripts/collect-ai-stats.mjs';
 import { publishAIStats } from '../scripts/publish-ai-stats.mjs';
 import { aiEnglish, renderAIStats } from '../scripts/ai-section.mjs';
 import { publicSourceBytes } from '../scripts/build.mjs';
-import { readCatalogs, renderPage } from '../scripts/i18n.mjs';
+import { readCatalogs, renderPage, escapeHTML } from '../scripts/i18n.mjs';
 
 const saved = JSON.parse(await readFile('data/ai-stats.json', 'utf8'));
 const copy = () => structuredClone(saved);
@@ -41,11 +41,13 @@ test('missing metrics and missing history stay null, unlike genuine zero values'
   const html = renderAIStats(unavailable, 'en');
   assert.equal([...html.matchAll(/data-ai-month="/g)].length, 12);
   assert.doesNotMatch(html, /<meter|data-ai-month-tokens|value="0"/);
+  assert.doesNotMatch(html, /ai-month-unit|id="ai-month-scale"|aria-describedby="ai-month-scale"/);
   assert.match(html, /Missing data is not shown as zero/);
   const empty = aggregateAIUsage({ summary: Object.fromEntries(summaryKeys.map(key => [key, 0])), dailyUsageBuckets: [] }, now);
   assert.ok(empty.months.every(month => month.tokens === 0));
   assert.match(renderAIStats(empty, 'en'), /data-ai-month-tokens/);
   assert.equal([...renderAIStats(empty, 'en').matchAll(/<meter /g)].length, 12);
+  assert.doesNotMatch(renderAIStats(empty, 'en'), /id="ai-month-scale"|aria-describedby="ai-month-scale"|Highest monthly/);
 });
 
 test('aggregation handles leap days, year rollover, unsorted buckets and older history', () => {
@@ -141,4 +143,23 @@ test('publishing requires explicit confirmation and uses only the fixed reposito
   assert.ok(calls.at(-1).includes('main'));
   assert.doesNotMatch(JSON.stringify(calls), /auth\.json|accessToken|threadUsage|git push/);
   await assert.rejects(publishAIStats({ confirmed: true, run: () => { throw new Error('private-token'); } }), error => !error.message.includes('private-token'));
+});
+
+test('monthly OpenAI cards identify token units and explain the current comparison maximum in every language', async () => {
+  const sources = await publicSourceBytes(), catalogs = readCatalogs(sources.get('index.html').toString('utf8'), sources);
+  const maximum = Math.max(...saved.months.map(month => month.tokens));
+  for (const code of ['en', 'uk', 'it', 'de']) {
+    const catalog = catalogs.get(code), html = renderAIStats(saved, code, catalog);
+    const scale = catalog['aiStats.scaleNote'];
+    assert.equal(scale.split('{maximum}').length, 2);
+    assert.ok(html.includes(escapeHTML(scale.replace('{maximum}', new Intl.NumberFormat(code).format(maximum)))));
+    assert.equal([...html.matchAll(new RegExp(`<span class="ai-month-unit">${escapeHTML(catalog['aiStats.tokens'])}</span>`, 'g'))].length, 12);
+    assert.equal([...html.matchAll(/aria-describedby="ai-month-scale"/g)].length, 12);
+    assert.doesNotMatch(html, /\{maximum\}|undefined/);
+  }
+  const changed = aggregateAIUsage(response(), now);
+  assert.match(renderAIStats(changed, 'en'), /Highest monthly reported token total shown: 1,000\./);
+  assert.match(renderAIStats(changed, 'en'), /max="1000" value="1000"/);
+  const attack = renderAIStats(saved, 'en', { ...aiEnglish, 'aiStats.scaleNote': '<script>{maximum}</script>' });
+  assert.match(attack, /&lt;script&gt;/); assert.doesNotMatch(attack, /<script>/);
 });
