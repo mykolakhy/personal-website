@@ -22,7 +22,7 @@ export const aiEnglish = {
   'aiStats.unavailable': 'Profile statistics are currently unavailable.',
   'aiStats.note': 'A dated snapshot of account activity, not a measure of productivity or work quality.',
   'aiStats.methodTitle': 'About these numbers',
-  'aiStats.method': 'Summary values come from the profile service. The longest task is elapsed task time, not hours worked. Monthly totals sum only the daily token values returned by that service; months without returned values show zero reported tokens, not proof of inactivity. Monthly totals and lifetime tokens cover different periods. Missing metrics remain unavailable. Conversations, task names, private projects, and credentials are not published. No statistics for Claude or other providers are included.',
+  'aiStats.method': 'Summary values come from the profile service. The longest task is elapsed task time, not hours worked. Monthly totals sum only the daily token values returned by that service; months without returned values show zero reported tokens, not proof of inactivity. Monthly totals and lifetime tokens cover different periods. Missing metrics remain unavailable. Conversations, task names, private projects, and credentials are not published. These figures cover ChatGPT / Codex only; Claude Code is shown separately.',
 };
 const escape = value => String(value).replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 

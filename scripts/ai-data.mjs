@@ -54,11 +54,11 @@ export function aggregateAIUsage(result, now = new Date()) {
   return validateAISnapshot({ version: 1, source: 'codex-account-usage', updatedAt, summary, months });
 }
 
-export async function latestAISnapshot(fallback, fetcher = fetch) {
-  validateAISnapshot(fallback);
+export async function latestAISnapshot(fallback, fetcher = fetch, { url = aiSnapshotURL, validate = validateAISnapshot, newer = (current, previous) => Date.parse(current.updatedAt) > Date.parse(previous.updatedAt) } = {}) {
+  validate(fallback);
   try {
     // Production can read only this sanitized PUBLIC asset, never account auth.
-    const response = await fetcher(aiSnapshotURL, { credentials: 'omit', signal: AbortSignal.timeout(15000) });
+    const response = await fetcher(url, { credentials: 'omit', signal: AbortSignal.timeout(15000) });
     if (!response.ok || !response.body) throw new Error('Unavailable');
     const reader = response.body.getReader();
     const chunks = []; let bytes = 0;
@@ -69,8 +69,8 @@ export async function latestAISnapshot(fallback, fetcher = fetch) {
       if (bytes > 20000) { await reader.cancel(); throw new Error('Too large'); }
       chunks.push(value);
     }
-    const current = validateAISnapshot(JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks))));
+    const current = validate(JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks))));
     if (Date.parse(current.updatedAt) > Date.now() + 300000) throw new Error('Future snapshot');
-    return Date.parse(current.updatedAt) > Date.parse(fallback.updatedAt) ? current : fallback;
+    return newer(current, fallback) ? current : fallback;
   } catch { console.warn('AI update unavailable; using the dated, validated snapshot.'); return fallback; }
 }

@@ -1,5 +1,6 @@
 import { githubEnglish, renderGithub } from './github-section.mjs';
 import { aiEnglish, renderAIStats } from './ai-section.mjs';
+import { claudeEnglish, renderClaudeStats } from './claude-section.mjs';
 
 export const languages = [
   { code: 'en', label: 'English', short: 'EN', path: '' },
@@ -19,6 +20,7 @@ export const escapeHTML = (value) => value.replaceAll('&', '&amp;').replaceAll('
 const interfaceEnglish = {
   ...githubEnglish,
   ...aiEnglish,
+  ...claudeEnglish,
   'language.label': 'Change language',
   'theme.light': 'Switch to light theme',
   'theme.dark': 'Switch to dark theme',
@@ -73,7 +75,7 @@ export function themeToggle(catalog = interfaceEnglish) {
       </button>`;
 }
 
-export function renderPage(template, code, catalog = interfaceEnglish, githubSnapshot = null, aiSnapshot = null, { page: pageKey = 'home', sources } = {}) {
+export function renderPage(template, code, catalog = interfaceEnglish, githubSnapshot = null, aiSnapshot = null, { page: pageKey = 'home', sources, claudeSnapshot = null } = {}) {
   const language = languages.find((language) => language.code === code);
   if (!language) throw new Error(`Unsupported language: ${code}`);
   const page = pages.find(page => page.key === pageKey);
@@ -122,6 +124,7 @@ export function renderPage(template, code, catalog = interfaceEnglish, githubSna
   html = html.replace(/<!-- theme-toggle -->[\s\S]*?<!-- \/theme-toggle -->/, () => themeToggle(catalog));
   html = html.replace(/<!-- github-data -->[\s\S]*?<!-- \/github-data -->/, () => renderGithub(githubSnapshot, code, catalog));
   html = html.replace(/<!-- ai-data -->[\s\S]*?<!-- \/ai-data -->/, () => renderAIStats(aiSnapshot, code, catalog));
+  html = html.replace(/<!-- claude-data -->[\s\S]*?<!-- \/claude-data -->/, () => renderClaudeStats(claudeSnapshot, code, catalog));
   // Markers are authoring-only; deployment needs no catalogs or client renderer.
   return html.replace(/\sdata-i18n(?:-content|-alt|-aria-label)?="[\w.-]+"/g, '');
 }
@@ -143,7 +146,7 @@ export function renderNotFound(code, catalog, homeRoot = '/') {
   <title>${text('404.title')}</title>
   <link rel="icon" type="image/svg+xml" href="${root}assets/favicon.svg" />
   <script src="${root}theme.js?v=20261002-1"></script>
-  <link rel="stylesheet" href="${root}styles.css?v=20261003-1" />
+  <link rel="stylesheet" href="${root}styles.css?v=20261003-2" />
 </head>
 <body>
   <header class="site-header"><div class="container header-inner"><a class="wordmark" href="${home}">mykola<span>/</span>qa</a><div class="header-controls">${themeToggle(catalog)}</div></div></header>
