@@ -5,6 +5,8 @@ const snapshot = JSON.parse(await readFile('data/ai-stats.json', 'utf8'));
 const titles = { en: 'AI, in numbers.', uk: 'ШІ у цифрах.', it: 'L’IA, in numeri.', de: 'KI in Zahlen.' };
 const claude = JSON.parse(await readFile('data/claude-stats.json', 'utf8'));
 const claudeLabels = { en: 'Claude Code activity', uk: 'Активність Claude Code', it: 'Attività con Claude Code', de: 'Aktivität mit Claude Code' };
+const tokenLabels = { en: 'Reported tokens', uk: 'Зафіксовані токени', it: 'Token registrati', de: 'Erfasste Token' };
+const sessionLabels = { en: 'Session starts', uk: 'Розпочаті сесії', it: 'Sessioni avviate', de: 'Gestartete Sitzungen' };
 
 for (const code of Object.keys(titles)) for (const theme of ['light', 'dark']) for (const width of [320, 768, 1440]) {
   test(`${code} AI statistics in ${theme} at ${width}px show exact local data without overflow`, async ({ page }) => {
@@ -21,6 +23,13 @@ for (const code of Object.keys(titles)) for (const theme of ['light', 'dark']) f
     const months = await section.locator('.ai-month').evaluateAll(cards => cards.map(card => ({ month: card.dataset.aiMonth, tokens: Number(card.querySelector('data').value), activeDays: Number(card.querySelector('.ai-month-days span').textContent) })));
     expect(months).toEqual(snapshot.months);
     await expect(section.locator('.ai-month meter')).toHaveCount(12);
+    await expect(section.locator('.ai-month-unit')).toHaveText(Array(12).fill(tokenLabels[code]));
+    const maximum = Math.max(...snapshot.months.map(month => month.tokens));
+    await expect(section.locator('#ai-month-scale')).toContainText(new Intl.NumberFormat(code).format(maximum));
+    for (const meter of await section.locator('meter').all()) {
+      await expect(meter).toHaveAttribute('max', String(maximum));
+      await expect(meter).toHaveAttribute('aria-describedby', 'ai-month-scale');
+    }
     await expect(section.locator('.ai-month-partial')).toHaveCount(1);
     await expect(section.locator('.ai-stats-updated time')).toHaveAttribute('datetime', snapshot.updatedAt);
     const geometry = await page.locator('.ai-month,.ai-stats-metrics > div').evaluateAll(cards => cards.map(card => ({ left: card.getBoundingClientRect().left, right: card.getBoundingClientRect().right, overflow: card.scrollWidth - card.clientWidth })));
@@ -76,7 +85,18 @@ for (const code of Object.keys(titles)) for (const theme of ['light', 'dark']) f
     const months = await section.locator('[data-claude-month]').evaluateAll(cards => cards.map(card => ({ month: card.dataset.claudeMonth, sessions: card.querySelector('data') ? Number(card.querySelector('data').value) : null, activeDays: card.querySelector('data') ? Number(card.querySelector('.ai-month-days span').textContent) : null })));
     expect(months).toEqual(claude.months);
     await expect(section.locator('meter')).toHaveCount(claude.months.filter(month => month.sessions !== null).length);
-    for (const month of claude.months.filter(month => month.sessions === null)) await expect(section.locator(`[data-claude-month="${month.month}"] data`)).toHaveCount(0);
+    const maximum = Math.max(...claude.months.map(month => month.sessions ?? 0));
+    await expect(section.locator('#claude-month-scale')).toContainText(new Intl.NumberFormat(code).format(maximum));
+    for (const month of claude.months) {
+      const card = section.locator(`[data-claude-month="${month.month}"]`);
+      if (month.sessions === null) {
+        await expect(card.locator('data,.ai-month-unit,meter')).toHaveCount(0);
+      } else {
+        await expect(card.locator('.ai-month-unit')).toHaveText(sessionLabels[code]);
+        await expect(card.locator('meter')).toHaveAttribute('max', String(maximum));
+        await expect(card.locator('meter')).toHaveAttribute('aria-describedby', 'claude-month-scale');
+      }
+    }
     const geometry = await section.locator('.ai-month,.ai-stats-metrics > div,.claude-models li').evaluateAll(cards => cards.map(card => ({ left: card.getBoundingClientRect().left, right: card.getBoundingClientRect().right, overflow: card.scrollWidth - card.clientWidth })));
     for (const card of geometry) { expect(card.left).toBeGreaterThanOrEqual(0); expect(card.right).toBeLessThanOrEqual(width); expect(card.overflow).toBeLessThanOrEqual(1); }
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);

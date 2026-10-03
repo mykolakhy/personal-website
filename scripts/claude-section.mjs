@@ -14,7 +14,9 @@ export const claudeEnglish = {
   'claudeStats.cacheReadInputTokens': 'Input tokens · read from cache',
   'claudeStats.cacheCreationInputTokens': 'Input tokens · written to cache',
   'claudeStats.monthlyTitle': 'Activity by month',
-  'claudeStats.monthlyNote': '12 calendar months up to the end of the period shown. Bars show session starts. Months outside the recorded period have no data, not zero activity.',
+  'claudeStats.monthlyNote': '12 calendar months up to the end of the period shown. Months outside the recorded period have no data, not zero activity.',
+  'claudeStats.activeDaysNote': 'Active days are dates with recorded activity, including work in ongoing sessions. One session can span several days, so active days can outnumber session starts.',
+  'claudeStats.scaleNote': 'Highest monthly session-start count shown: {maximum}. The green fill shows the share of that maximum; the unfilled part is the rest of the scale, not inactive days.',
   'claudeStats.partial': 'Partial month',
   'claudeStats.sessionsUnit': 'Session starts',
   'claudeStats.note': 'An activity snapshot, not a measure of productivity. Token categories differ from ChatGPT / Codex, so the totals are not directly comparable.',
@@ -37,18 +39,19 @@ export function renderClaudeStats(snapshot, code, catalog = { ...claudeEnglish, 
   const count = (value, attribute = '') => `<data value="${value}" ${attribute} title="${escape(number(value))}"><span class="ai-compact-number" aria-hidden="true">${compact(value)}</span><span class="sr-only">${escape(number(value))}</span></data>`;
   const day = value => new Intl.DateTimeFormat(code, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${value}T00:00:00.000Z`));
   const metrics = claudeSummaryKeys.map(key => `<div><dt>${text(key)}</dt><dd data-claude-metric="${key}">${count(snapshot.summary[key])}</dd></div>`).join('');
-  const maximum = Math.max(1, ...snapshot.months.map(month => month.sessions ?? 0));
+  const maximum = Math.max(0, ...snapshot.months.map(month => month.sessions ?? 0));
+  const scaleNote = maximum > 0 ? `<p id="claude-month-scale" class="ai-stats-note ai-month-scale">${text('scaleNote').replace('{maximum}', escape(number(maximum)))}</p>` : '';
   const months = snapshot.months.map(month => {
     const label = new Intl.DateTimeFormat(code, { month: 'short', timeZone: 'UTC' }).format(new Date(`${month.month}-01T00:00:00.000Z`));
     const last = new Date(Date.UTC(Number(month.month.slice(0, 4)), Number(month.month.slice(5)), 0)).getUTCDate();
     const partial = month.sessions !== null && ((month.month === snapshot.coverageStart.slice(0, 7) && Number(snapshot.coverageStart.slice(8)) > 1) || (month.month === snapshot.computedThrough.slice(0, 7) && Number(snapshot.computedThrough.slice(8)) < last));
-    return `<div class="ai-month" data-claude-month="${month.month}"><dt><time datetime="${month.month}">${escape(label)} <span class="ai-month-year">${month.month.slice(0, 4)}</span></time>${partial ? `<span class="ai-month-partial">${text('partial')}</span>` : ''}</dt><dd class="ai-month-count${month.sessions === null ? ' ai-month-unavailable' : ''}">${month.sessions === null ? escape(catalog['aiStats.noData']) : count(month.sessions, 'data-claude-month-sessions')}</dd><dd class="ai-month-days">${text('activeDays')}: <span>${month.activeDays === null ? '—' : number(month.activeDays)}</span></dd>${month.sessions === null ? '' : `<dd class="ai-month-bar"><meter min="0" max="${maximum}" value="${month.sessions}" aria-label="${escape(`${label} ${month.month.slice(0, 4)}`)}" aria-valuetext="${text('sessionsUnit')}: ${escape(number(month.sessions))}">${number(month.sessions)}</meter></dd>`}</div>`;
+    return `<div class="ai-month" data-claude-month="${month.month}"><dt><time datetime="${month.month}">${escape(label)} <span class="ai-month-year">${month.month.slice(0, 4)}</span></time>${partial ? `<span class="ai-month-partial">${text('partial')}</span>` : ''}</dt><dd class="ai-month-count${month.sessions === null ? ' ai-month-unavailable' : ''}">${month.sessions === null ? escape(catalog['aiStats.noData']) : `${count(month.sessions, 'data-claude-month-sessions')}<span class="ai-month-unit">${text('sessionsUnit')}</span>`}</dd><dd class="ai-month-days">${text('activeDays')}: <span>${month.activeDays === null ? '—' : number(month.activeDays)}</span></dd>${month.sessions === null ? '' : `<dd class="ai-month-bar"><meter min="0" max="${Math.max(1, maximum)}" value="${month.sessions}" aria-label="${escape(`${label} ${month.month.slice(0, 4)}`)}" aria-valuetext="${text('sessionsUnit')}: ${escape(number(month.sessions))}"${maximum > 0 ? ' aria-describedby="claude-month-scale"' : ''}>${number(month.sessions)}</meter></dd>`}</div>`;
   }).join('');
   const collected = new Intl.DateTimeFormat(code, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'UTC' }).format(new Date(snapshot.updatedAt));
   return `<div class="claude-coverage"><p class="ai-stats-note">${text('coverage')}: <time datetime="${snapshot.coverageStart}">${escape(day(snapshot.coverageStart))}</time> — <time data-claude-through datetime="${snapshot.computedThrough}">${escape(day(snapshot.computedThrough))}</time></p></div>
         <dl class="ai-stats-metrics claude-metrics">${metrics}</dl>
         <div class="claude-models"><h3>${text('models')}</h3><ul>${snapshot.models.map(model => `<li><code>${escape(model)}</code></li>`).join('')}</ul></div>
-        <div class="ai-monthly"><h3>${text('monthlyTitle')}</h3><p class="ai-stats-note">${text('monthlyNote')}</p><dl class="ai-months">${months}</dl></div>
+        <div class="ai-monthly"><h3>${text('monthlyTitle')}</h3><p class="ai-stats-note">${text('monthlyNote')}</p><p class="ai-stats-note">${text('activeDaysNote')}</p>${scaleNote}<dl class="ai-months">${months}</dl></div>
         <p class="ai-stats-note">${text('note')}</p>
         <p class="ai-stats-updated">${text('collected')}: <time datetime="${snapshot.updatedAt}">${escape(collected)} UTC</time></p>
         <details class="ai-stats-method"><summary>${escape(catalog['aiStats.methodTitle'])}<span class="disclosure-mark" aria-hidden="true">+</span></summary><div class="detail-body"><p>${text('method')}</p></div></details>`;

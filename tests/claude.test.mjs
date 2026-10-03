@@ -132,3 +132,41 @@ test('public AI copy identifies the owner, keeps local scope in the disclosure a
     assert.ok(html.includes(escapeHTML(catalog['meta.aiDescription'])));
   }
 });
+
+test('monthly Claude cards label session starts and explain active days and the actual comparison scale in every language', async () => {
+  const sources = await publicSourceBytes(), catalogs = readCatalogs(sources.get('index.html').toString('utf8'), sources);
+  const maximum = Math.max(...saved.months.map(month => month.sessions ?? 0));
+  for (const code of ['en', 'uk', 'it', 'de']) {
+    const catalog = catalogs.get(code), html = renderClaudeStats(saved, code, catalog);
+    const scale = catalog['claudeStats.scaleNote'];
+    assert.equal(scale.split('{maximum}').length, 2);
+    assert.ok(html.includes(escapeHTML(scale.replace('{maximum}', new Intl.NumberFormat(code).format(maximum)))));
+    assert.ok(html.includes(escapeHTML(catalog['claudeStats.activeDaysNote'])));
+    assert.doesNotMatch(html, /\{maximum\}|undefined/);
+    for (const month of saved.months) {
+      const card = html.match(new RegExp(`data-claude-month="${month.month}"([\\s\\S]*?)</div>`))[1];
+      if (month.sessions === null) {
+        assert.doesNotMatch(card, /ai-month-unit|<data|<meter/);
+      } else {
+        assert.ok(card.includes(`<span class="ai-month-unit">${escapeHTML(catalog['claudeStats.sessionsUnit'])}</span>`));
+        assert.ok(card.includes(`max="${maximum}" value="${month.sessions}"`));
+        assert.match(card, /aria-describedby="claude-month-scale"/);
+      }
+    }
+  }
+});
+
+test('Claude comparison scale follows changing data without inventing a maximum for zero counts', () => {
+  const single = sample(); single.summary.sessions = 1; single.months[1].sessions = 1;
+  const html = renderClaudeStats(single, 'en');
+  assert.match(html, /Highest monthly session-start count shown: 1\./);
+  assert.match(html, /max="1" value="1"/);
+  const empty = sample(); empty.summary.sessions = 0; empty.months[1].sessions = 0;
+  const zero = renderClaudeStats(empty, 'en');
+  assert.equal([...zero.matchAll(/class="ai-month-unit"/g)].length, 2);
+  assert.doesNotMatch(zero, /id="claude-month-scale"|aria-describedby="claude-month-scale"|Highest monthly/);
+  assert.match(zero, /max="1" value="0"/);
+  const attack = renderClaudeStats(saved, 'en', { ...claudeEnglish, 'aiStats.methodTitle': 'About these numbers', 'aiStats.noData': 'No data', 'claudeStats.scaleNote': '<script>{maximum}</script>' });
+  assert.match(attack, /&lt;script&gt;24&lt;\/script&gt;/);
+  assert.doesNotMatch(attack, /<script>/);
+});
