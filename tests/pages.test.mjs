@@ -26,6 +26,28 @@ test('the compact homepage keeps seven sections, experience and cases, without e
   }
 });
 
+test('home promotes localized Projects and AI links in the hero, while detail pages retain header navigation', () => {
+  for (const { code, path } of languages) {
+    const html = render(code, 'home');
+    const header = html.match(/<nav class="site-nav"[^>]*>([\s\S]*?)<\/nav>/)[1];
+    const heroNavigation = html.match(/<nav class="hero-navigation"[^>]*>([\s\S]*?)<\/nav>/)[1];
+    assert.equal([...header.matchAll(/<a\b/g)].length, 2);
+    assert.doesNotMatch(header, /projects\/|ai\//);
+    assert.equal([...heroNavigation.matchAll(/<a\b/g)].length, 2);
+    for (const destination of ['projects', 'ai']) assert.ok(heroNavigation.includes(`href="${path ? '../' : './'}${path}${destination}/"`));
+    assert.ok(html.indexOf('class="hero-actions"') < html.indexOf('class="hero-navigation"'));
+    assert.ok(html.indexOf('class="hero-navigation"') < html.indexOf('class="proof-grid"'));
+    assert.doesNotMatch(html, /secondary-page-navigation/);
+    for (const page of ['projects', 'ai']) {
+      const detail = render(code, page);
+      const navigation = detail.match(/<nav class="site-nav"[^>]*>([\s\S]*?)<\/nav>/)[1];
+      assert.equal([...navigation.matchAll(/<a\b/g)].length, 4);
+      assert.match(navigation, /aria-current="page"/);
+      assert.doesNotMatch(detail, /class="hero-navigation"|secondary-page-navigation/);
+    }
+  }
+});
+
 test('all twelve pages have complete local links, unique IDs, localized page switchers and active navigation', () => {
   const documents = new Map();
   for (const { code, path } of languages) for (const page of pages) documents.set(path + page.path + 'index.html', render(code, page.key));

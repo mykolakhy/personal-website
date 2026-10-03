@@ -56,7 +56,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-v
 .wordmark { display: inline-flex; align-items: center; min-height: 44px; color: var(--text-heading); font: 600 19px/1 var(--font-display); text-decoration: none; white-space: nowrap; }
 .wordmark span { color: var(--accent); }
 .site-nav { display: flex; gap: 16px; margin-left: auto; }
-.site-nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; color: var(--text-muted); font: 500 13px/1 var(--font-mono); text-decoration: none; }
+.site-nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; color: var(--text-heading); font: 500 14px/1 var(--font-mono); text-decoration: none; }
 .site-nav a:hover, .contact-link:hover strong { color: var(--accent); }
 .site-nav a[aria-current="page"] { color: var(--accent); text-decoration: underline; text-underline-offset: 6px; }
 .header-status { display: flex; align-items: center; min-height: 44px; gap: 10px; color: var(--text-muted); font: 400 12px/1.4 var(--font-mono); text-decoration: none; white-space: nowrap; }
@@ -81,6 +81,10 @@ a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-v
 .hero { display: flex; align-items: center; }
 .grid-texture { background-image: linear-gradient(to right, var(--grid-line) 1px, transparent 1px), linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px); background-size: 32px 32px; }
 .hero-inner { padding-top: 88px; padding-bottom: 72px; }
+.hero-body { display: grid; grid-template-columns: minmax(0, 1fr) clamp(210px, 22vw, 292px); gap: clamp(32px, 4vw, 56px); align-items: start; }
+.hero-copy { min-width: 0; }
+.hero-navigation { display: grid; gap: 12px; margin-top: 64px; }
+.hero-navigation .button { justify-content: space-between; background: var(--bg-surface); }
 .eyebrow, .mono-label, .case-type { margin: 0; color: var(--accent); font: 500 12px/1.5 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; }
 .signal-mark { display: inline-block; width: 7px; height: 7px; margin-right: 8px; background: var(--accent); }
 h1, h2, h3 { margin: 0; color: var(--text-heading); font-family: var(--font-display); font-weight: 600; letter-spacing: -.03em; }
@@ -272,6 +276,8 @@ details[open] .disclosure-mark { transform: rotate(45deg); }
 @media (max-width: 1200px) { .header-status { display: none; } }
 @media (max-width: 1000px) {
   .header-status { display: none; }
+  .hero-body { grid-template-columns: 1fr; gap: 0; }
+  .hero-navigation { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 480px; margin-top: 24px; }
   .work-grid, .toolbox-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .work-grid > :last-child, .toolbox-grid > :last-child { grid-column: 1 / -1; }
   .section-heading-row, .about-grid, .contact-grid { column-gap: 32px; }
@@ -301,7 +307,7 @@ details[open] .disclosure-mark { transform: rotate(45deg); }
   .wordmark { font-size: 18px; }
   .header-controls { grid-column: 2; grid-row: 1; }
   .site-nav { grid-column: 1 / -1; grid-row: 2; min-width: 0; margin-left: 0; justify-content: space-between; gap: 8px; }
-  .site-nav a { font-size: 12px; }
+  .site-nav a { font-size: 13px; }
   h1 { font-size: clamp(48px, 12vw, 64px); max-width: 9ch; }
   .hero-inner { padding-top: 48px; }
   .hero-lede { font-size: 18px; }
@@ -346,7 +352,8 @@ details[open] .disclosure-mark { transform: rotate(45deg); }
   :root, :root[data-theme] { color-scheme: light; }
   body { background: white; color: #222; font-size: 11pt; }
   h1, h2, h3, .prose, .prose strong, .hero-tagline, .hero-lede, .hero-ai, .hero-ai a, .stat strong, .stat span, .eyebrow, .mono-label, .section-intro, .case-card p, .principle p, .tool-group p, .experience-list p:last-child, .contact-lede, .role-scope, .contact-link strong, .contact-label, .availability, .footer-inner, .tag, summary, .case-number, .case-type { color: #222; }
-  .site-header, .skip-link, .hero-actions, .case-link, .experience-cv, .contact-arrow, .status-dot, .disclosure-mark { display: none; }
+  .site-header, .skip-link, .hero-actions, .hero-navigation, .case-link, .experience-cv, .contact-arrow, .status-dot, .disclosure-mark { display: none; }
+  .hero-body { display: block; }
   .container { width: 100%; }
   .hero-inner, .section { padding: 20px 0; }
   .grid-texture, .card, .tool-group, .section-contact, .site-footer { background: white; }

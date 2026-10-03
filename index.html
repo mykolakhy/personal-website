@@ -19,7 +19,7 @@
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
   <link rel="preload" href="./assets/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
   <script src="./theme.js?v=20261002-1"></script>
-  <link rel="stylesheet" href="./styles.css?v=20261002-7" />
+  <link rel="stylesheet" href="./styles.css?v=20261003-1" />
   <!-- Production metadata is added by the build when a real URL is configured. -->
 </head>
 <body>
@@ -27,7 +27,7 @@
   <header class="site-header">
     <div class="container header-inner">
       <a class="wordmark" data-route="home" href="#top" data-i18n-aria-label="homeLabel" aria-label="Mykola Khytra home">mykola<span>/</span>qa</a>
-      <nav class="site-nav" data-i18n-aria-label="navLabel" aria-label="Primary navigation"><a data-i18n="nav.work" data-route="home" href="#work">Work</a><a data-i18n="nav.projects" data-route="projects" href="./projects/">Projects</a><a data-i18n="nav.ai" data-route="ai" href="./ai/">AI</a><a data-i18n="contact.label" data-route="home" href="#contact">Contact</a></nav>
+      <nav class="site-nav" data-i18n-aria-label="navLabel" aria-label="Primary navigation"><a data-i18n="nav.work" data-route="home" href="#work">Work</a><!-- secondary-page-navigation --><a data-i18n="contact.label" data-route="home" href="#contact">Contact</a></nav>
       <a class="header-status" data-route="home" href="#contact"><span class="status-dot" aria-hidden="true"></span><span data-i18n="status">Open to senior QA roles</span></a>
       <div class="header-controls">
         <!-- theme-toggle -->
@@ -42,13 +42,21 @@
       <div class="container hero-inner">
         <p class="eyebrow"><span class="signal-mark" aria-hidden="true"></span><span data-i18n="location">Kraków, Poland</span></p>
         <h1 id="hero-title">Mykola Khytra.</h1>
-        <p data-i18n="hero.tagline" class="hero-tagline">Senior QA Engineer who makes releases boring.</p>
-        <p data-i18n="hero.lede" class="hero-lede">Manual, API, and automated testing. Product risks, exploratory testing, and confident release decisions.</p>
-        <p class="hero-ai"><span data-i18n="ai.label" class="mono-label">AI-assisted QA</span> <span data-i18n="hero.ai">Claude Code &amp; Codex for test design, debugging, and documentation.</span> <a data-route="ai" href="./ai/#ai-workflow"><span data-i18n="hero.workflow">See the workflow</span> <span aria-hidden="true">→</span></a></p>
-        <div class="hero-actions">
-          <a class="button button-primary" href="#work"><span data-i18n="hero.work">Explore the work</span> <span aria-hidden="true">→</span></a>
-          <a class="button button-secondary" href="./assets/downloads/mykola-khytra-cv.pdf" download><span data-i18n="hero.cv">Download CV</span> <span class="file-label">PDF</span></a>
-          <a class="text-link" href="#contact"><span data-i18n="hero.talk">Let’s talk</span> <span aria-hidden="true">↗</span></a>
+        <div class="hero-body">
+          <div class="hero-copy">
+            <p data-i18n="hero.tagline" class="hero-tagline">Senior QA Engineer who makes releases boring.</p>
+            <p data-i18n="hero.lede" class="hero-lede">Manual, API, and automated testing. Product risks, exploratory testing, and confident release decisions.</p>
+            <p class="hero-ai"><span data-i18n="ai.label" class="mono-label">AI-assisted QA</span> <span data-i18n="hero.ai">Claude Code &amp; Codex for test design, debugging, and documentation.</span> <a data-route="ai" href="./ai/#ai-workflow"><span data-i18n="hero.workflow">See the workflow</span> <span aria-hidden="true">→</span></a></p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="#work"><span data-i18n="hero.work">Explore the work</span> <span aria-hidden="true">→</span></a>
+              <a class="button button-secondary" href="./assets/downloads/mykola-khytra-cv.pdf" download><span data-i18n="hero.cv">Download CV</span> <span class="file-label">PDF</span></a>
+              <a class="text-link" href="#contact"><span data-i18n="hero.talk">Let’s talk</span> <span aria-hidden="true">↗</span></a>
+            </div>
+          </div>
+          <nav class="hero-navigation" aria-label="More to explore" data-i18n-aria-label="page.more">
+            <a class="button button-secondary" data-route="projects" href="./projects/"><span data-i18n="nav.projects">Projects</span><span aria-hidden="true">→</span></a>
+            <a class="button button-secondary" data-route="ai" href="./ai/"><span data-i18n="nav.ai">AI</span><span aria-hidden="true">→</span></a>
+          </nav>
         </div>
         <div class="proof-grid" data-i18n-aria-label="proofLabel" aria-label="Professional highlights">
           <div class="stat"><strong>5+</strong><span data-i18n="proof.years">years in QA</span></div>

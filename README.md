@@ -78,6 +78,11 @@ downloads and back links are relative to their generated location, including
 production sites hosted under a subpath. Each page has its own title, description,
 canonical URL and same-page language alternatives.
 
+On the homepage, the header links to Work and Contact. Projects and AI are
+outlined hero buttons: stacked to the right above 1000px, or side by side below
+the main actions on smaller screens. Detail pages retain all four header links
+and highlight the current page. These links also work without JavaScript.
+
 Old homepage links to `#github`, `#ai-workflow` and `#ai-activity` redirect to the
 relocated content with JavaScript, preserving the language and query. Without
 JavaScript they land on homepage previews with links to the full pages. The old
