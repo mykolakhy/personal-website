@@ -225,8 +225,8 @@ h3 { font-size: 24px; line-height: 1.3; }
 .ai-month-help svg { flex: 0 0 18px; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
 .ai-month-help .detail-body { margin-top: 16px; padding: 20px; border: 1px solid var(--border-hairline); border-radius: 8px; background: var(--bg-surface); }
 .ai-month-help .detail-body p + p { margin-top: 12px; }
-.ai-month-history { border: 0; }
-.ai-month-history > summary { justify-content: center; min-height: 48px; padding: 10px; border: 1px solid var(--border-hairline); border-radius: 8px; background: var(--bg-sunken); color: var(--text-heading); }
+.ai-month-history { display: flex; flex-direction: column; border: 0; }
+.ai-month-history > summary { order: 1; justify-content: center; min-height: 48px; padding: 10px; border: 1px solid var(--border-hairline); border-radius: 8px; background: var(--bg-sunken); color: var(--text-heading); }
 .ai-month-history > summary:hover { border-color: var(--border-strong); color: var(--text-heading); }
 .ai-history-arrow { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .ai-month-history[open] > summary .ai-history-arrow { transform: rotate(180deg); }
@@ -247,7 +247,7 @@ h3 { font-size: 24px; line-height: 1.3; }
 .claude-models ul { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
 .claude-models li { max-width: 100%; padding: 6px 10px; border: 1px solid var(--border-hairline); border-radius: 6px; color: var(--text-muted); font-size: 13px; overflow-wrap: anywhere; }
 .ai-months { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 20px 0 16px; }
-.ai-months-older { margin-bottom: 0; }
+.ai-months-older { margin: 0 0 16px; }
 .ai-month { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); grid-template-rows: auto 1fr auto; column-gap: 14px; min-width: 0; min-height: 190px; padding: 20px; border: 1px solid var(--border-hairline); border-radius: 8px; background: var(--bg-sunken); }
 .ai-month dt { grid-column: 1 / -1; min-height: 52px; color: var(--text-heading); font: 500 14px/1.5 var(--font-mono); }
 .ai-month time { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; text-transform: capitalize; }

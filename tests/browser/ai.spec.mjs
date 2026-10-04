@@ -28,8 +28,15 @@ async function checkPrintedMonths(section) {
 
 async function checkMonthlyDisclosure(section, code, width) {
   const history = section.locator('.ai-month-history'), summary = history.locator('summary');
+  const checkControlBelowCards = async () => {
+    const lastCardBottom = await section.locator('.ai-month:visible').evaluateAll(cards => Math.max(...cards.map(card => card.getBoundingClientRect().bottom)));
+    const controlTop = await summary.evaluate(element => element.getBoundingClientRect().top);
+    expect(controlTop - lastCardBottom).toBeGreaterThanOrEqual(12);
+    expect(controlTop - lastCardBottom).toBeLessThanOrEqual(20);
+  };
   await expect(section.locator('.ai-month:visible')).toHaveCount(3);
   await expect(history).not.toHaveAttribute('open', '');
+  await checkControlBelowCards();
   await expect(summary).toHaveAccessibleName(historyLabels[code][0]);
   expect(await summary.evaluate(element => element.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
   const arrow = summary.locator('.ai-history-arrow');
@@ -40,6 +47,7 @@ async function checkMonthlyDisclosure(section, code, width) {
   await expect(history).toHaveAttribute('open', '');
   await expect(summary).toHaveAccessibleName(historyLabels[code][1]);
   await expect(section.locator('.ai-month:visible')).toHaveCount(12);
+  await checkControlBelowCards();
   expect(await arrow.evaluate(element => getComputedStyle(element).transform)).not.toBe(closedArrow.transform);
   expect(await section.locator('meter').evaluateAll(meters => meters.map(meter => [meter.value, meter.max]))).toEqual(values);
   const geometry = await section.locator('.ai-month:visible').evaluateAll(cards => cards.map(card => ({ left: card.getBoundingClientRect().left, right: card.getBoundingClientRect().right, overflow: card.scrollWidth - card.clientWidth })));
@@ -47,9 +55,11 @@ async function checkMonthlyDisclosure(section, code, width) {
   await summary.focus(); await section.page().keyboard.press('Space');
   await expect(history).not.toHaveAttribute('open', '');
   await expect(section.locator('.ai-month:visible')).toHaveCount(3);
+  await checkControlBelowCards();
   await expect(summary).toHaveAccessibleName(historyLabels[code][0]);
   await summary.focus(); await section.page().keyboard.press('Enter');
   await expect(section.locator('.ai-month:visible')).toHaveCount(12);
+  await checkControlBelowCards();
 }
 
 for (const code of Object.keys(titles)) for (const theme of ['light', 'dark']) for (const width of [320, 768, 1440]) {
