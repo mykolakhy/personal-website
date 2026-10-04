@@ -371,8 +371,16 @@ details[open] .disclosure-mark { transform: rotate(45deg); }
   :root { --page-pad: 16px; }
   .site-nav { gap: 4px; }
   .site-nav a { padding: 0 3px; }
-  .site-nav .compact-page-link { gap: 2px; padding: 0 3px; }
+  html[data-page="home"] .site-nav { gap: 4px; }
+  html[data-page="home"] .site-nav > a:not(.compact-page-link) { padding: 0; }
+  .site-nav .compact-page-link { gap: 4px; }
   .hero-actions .button { width: 100%; }
+}
+@media (max-width: 319px) {
+  html[data-page="home"] { scroll-padding-top: 160px; }
+  html[data-page="home"] .site-nav { display: flex; flex-wrap: wrap; }
+  .site-nav .compact-page-link { flex: 1 0 calc((100% - 4px) / 2); }
+  .site-nav .nav-work { margin-left: auto; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0s !important; }

@@ -85,6 +85,9 @@ below the main actions at 601–1000px. At 600px and below, these buttons move t
 left of the header's second row, with Work and Contact on the right. They share
 the remaining space equally, with right-aligned arrows and the same transparent
 background as the theme/language controls; duplicate hero links are hidden.
+Buttons keep 8px horizontal padding on narrow screens. At 360px and below the
+navigation gaps tighten instead; below 320px Work and Contact wrap into a
+right-aligned row beneath the two full-width buttons without reducing text size.
 Detail pages retain all four header links and highlight
 the current page. These links also work without JavaScript.
 

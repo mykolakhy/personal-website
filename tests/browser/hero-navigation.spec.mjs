@@ -65,11 +65,12 @@ for (const locale of locales) for (const theme of ['light', 'dark']) for (const 
       expect(geometry.navigation.top).toBeGreaterThanOrEqual(geometry.wordmark.bottom);
       expect(geometry.navigation.top).toBeGreaterThanOrEqual(geometry.controls.bottom);
       const [projects, ai, work, contact] = geometry.links;
+      const gap = width <= 360 ? 4 : 8;
       expect(Math.abs(projects.width - ai.width)).toBeLessThan(1);
       expect(projects.left).toBeCloseTo(geometry.navigation.left, 0);
-      expect(ai.left - projects.right).toBeCloseTo(8, 0);
-      expect(work.left - ai.right).toBeCloseTo(8, 0);
-      expect(contact.left - work.right).toBeCloseTo(8, 0);
+      expect(ai.left - projects.right).toBeCloseTo(gap, 0);
+      expect(work.left - ai.right).toBeCloseTo(gap, 0);
+      expect(contact.left - work.right).toBeCloseTo(gap, 0);
       expect(contact.right).toBeCloseTo(geometry.navigation.right, 0);
       for (const [index, part] of geometry.compactParts.entries()) {
         const button = geometry.buttons[index];
@@ -77,7 +78,8 @@ for (const locale of locales) for (const theme of ['light', 'dark']) for (const 
         expect(part.background).toBe(geometry.languageBackground);
         expect(part.label.left - button.left).toBeCloseTo(part.inset, 0);
         expect(button.right - part.arrow.right).toBeCloseTo(part.inset, 0);
-        expect(part.arrow.left - part.label.right).toBeGreaterThanOrEqual(2);
+        expect(part.inset).toBeGreaterThanOrEqual(9);
+        expect(part.arrow.left - part.label.right).toBeGreaterThanOrEqual(4);
       }
       for (const link of geometry.links) { expect(link.top).toBeCloseTo(first.top, 0); expect(link.height).toBeGreaterThanOrEqual(44); expect(link.width).toBeGreaterThanOrEqual(44); }
     } else if (width > 1000) {
@@ -96,6 +98,72 @@ for (const locale of locales) for (const theme of ['light', 'dark']) for (const 
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze()).violations).toEqual([]);
   });
 }
+
+for (const theme of ['light', 'dark']) test(`narrow header keeps comfortable button insets and resize behavior in ${theme}`, async ({ page }) => {
+  for (const { path } of locales) {
+    await page.emulateMedia({ colorScheme: theme });
+    await page.goto(`/${path}`);
+    await page.evaluate(() => document.fonts.ready);
+    for (const width of [280, 300, 319, 320, 340, 360, 361, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      const layout = await page.locator('.site-nav').evaluate(nav => {
+        const rect = element => {
+          const { left, right, top, bottom, width, height } = element.getBoundingClientRect();
+          return { left, right, top, bottom, width, height };
+        };
+        return {
+          nav: rect(nav), overflow: document.documentElement.scrollWidth - innerWidth,
+          controls: rect(document.querySelector('.header-controls')),
+          links: [...nav.children].map(link => ({ ...rect(link), fontSize: getComputedStyle(link).fontSize })),
+          parts: [...nav.querySelectorAll('.compact-page-link')].map(link => ({
+            label: rect(link.children[0]), arrow: rect(link.children[1]),
+          })),
+        };
+      });
+      expect(layout.overflow).toBeLessThanOrEqual(1);
+      const [projects, ai, work, contact] = layout.links;
+      expect(Math.abs(projects.width - ai.width)).toBeLessThan(1);
+      expect(projects.left).toBeCloseTo(layout.nav.left, 0);
+      expect(contact.right).toBeCloseTo(layout.nav.right, 0);
+      expect(projects.top).toBeGreaterThanOrEqual(layout.controls.bottom);
+      for (const [index, part] of layout.parts.entries()) {
+        const button = layout.links[index];
+        expect(part.label.left - button.left).toBeCloseTo(9, 0);
+        expect(button.right - part.arrow.right).toBeCloseTo(9, 0);
+        expect(part.arrow.left - part.label.right).toBeGreaterThanOrEqual(4);
+      }
+      for (const link of layout.links) {
+        expect(link.height).toBeGreaterThanOrEqual(44);
+        expect(link.width).toBeGreaterThanOrEqual(44);
+        expect(link.fontSize).toBe('12px');
+        expect(link.left).toBeGreaterThanOrEqual(0);
+        expect(link.right).toBeLessThanOrEqual(width);
+      }
+      if (width < 320) {
+        expect(ai.right).toBeCloseTo(layout.nav.right, 0);
+        expect(work.top).toBeGreaterThanOrEqual(projects.bottom + 4);
+        expect(contact.top).toBeCloseTo(work.top, 0);
+        expect(contact.left - work.right).toBeCloseTo(4, 0);
+      } else {
+        for (const link of layout.links) expect(link.top).toBeCloseTo(projects.top, 0);
+        expect(work.left - ai.right).toBeCloseTo(width <= 360 ? 4 : 8, 0);
+      }
+      await page.locator('.language-switcher summary').click();
+      await expect.poll(() => page.evaluate(() => {
+        const menu = document.querySelector('.language-list').getBoundingClientRect();
+        return [...document.querySelectorAll('.site-nav a')].every(link => {
+          const r = link.getBoundingClientRect();
+          return link.inert === (r.left < menu.right && r.right > menu.left && r.top < menu.bottom && r.bottom > menu.top);
+        });
+      })).toBe(true);
+      await page.locator('.language-switcher summary').press('Escape');
+      await expect(page.locator('.site-nav a[inert]')).toHaveCount(0);
+    }
+    await page.getByRole('navigation').getByRole('link').last().click();
+    const headerBottom = await page.locator('.site-header').evaluate(el => el.getBoundingClientRect().bottom);
+    expect(await page.locator('#contact-title').evaluate(el => el.getBoundingClientRect().top)).toBeGreaterThan(headerBottom);
+  }
+});
 
 for (const javaScriptEnabled of [true, false]) {
   test(`hero links and detail-page navigation work with JavaScript ${javaScriptEnabled ? 'on' : 'off'}`, async ({ browser }) => {
