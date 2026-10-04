@@ -8,18 +8,23 @@ const locales = [
   { code: 'de', path: 'de/', projects: 'Projekte', ai: 'KI' },
 ];
 
-for (const locale of locales) for (const theme of ['light', 'dark']) for (const width of [320, 390, 1000, 1001, 1440]) {
+for (const locale of locales) for (const theme of ['light', 'dark']) for (const width of [320, 390, 600, 601, 1000, 1001, 1440]) {
   test(`${locale.code} hero navigation fits ${theme} at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.emulateMedia({ colorScheme: theme });
     await page.goto(`/${locale.path}`);
     await page.evaluate(() => document.fonts.ready);
-    await expect(page.locator('.site-nav a')).toHaveCount(2);
-    const navigation = page.locator('.hero-navigation');
-    await expect(navigation.getByRole('link')).toHaveCount(2);
+    const compact = width <= 600;
+    await expect(page.locator('.site-nav a')).toHaveCount(4);
+    await expect(page.locator('.site-nav a:visible')).toHaveCount(compact ? 4 : 2);
+    const navigation = page.locator(compact ? '.site-nav' : '.hero-navigation');
+    const destinations = compact ? navigation.locator('.compact-page-link') : navigation.getByRole('link');
+    if (compact) await expect(page.locator('.hero-navigation')).toBeHidden();
+    else await expect(page.locator('.hero-navigation')).toBeVisible();
+    await expect(destinations).toHaveCount(2);
     await expect(navigation.getByRole('link', { name: locale.projects, exact: true })).toHaveAttribute('href', `${locale.path ? '../' : './'}${locale.path}projects/`);
     await expect(navigation.getByRole('link', { name: locale.ai, exact: true })).toHaveAttribute('href', `${locale.path ? '../' : './'}${locale.path}ai/`);
-    for (const button of await navigation.getByRole('link').all()) {
+    for (const button of await destinations.all()) {
       await expect(button).toHaveCSS('background-color', theme === 'dark' ? 'rgb(17, 21, 27)' : 'rgb(255, 255, 255)');
       await expect(button).toHaveCSS('color', theme === 'dark' ? 'rgb(237, 241, 245)' : 'rgb(23, 32, 25)');
     }
@@ -32,9 +37,12 @@ for (const locale of locales) for (const theme of ['light', 'dark']) for (const 
         scrollWidth: document.documentElement.scrollWidth,
         copy: measure(document.querySelector('.hero-copy')),
         actions: measure(document.querySelector('.hero-actions')),
-        navigation: measure(document.querySelector('.hero-navigation')),
+        navigation: measure(document.querySelector(innerWidth <= 600 ? '.site-nav' : '.hero-navigation')),
         proof: measure(document.querySelector('.proof-grid')),
-        buttons: [...document.querySelectorAll('.hero-navigation a')].map(measure),
+        wordmark: measure(document.querySelector('.wordmark')),
+        controls: measure(document.querySelector('.header-controls')),
+        links: [...document.querySelectorAll('.site-nav a')].filter(el => el.getClientRects().length).map(measure),
+        buttons: [...document.querySelectorAll(innerWidth <= 600 ? '.compact-page-link' : '.hero-navigation a')].map(measure),
       };
     });
     expect(geometry.scrollWidth).toBeLessThanOrEqual(width + 1);
@@ -42,16 +50,27 @@ for (const locale of locales) for (const theme of ['light', 'dark']) for (const 
     for (const button of geometry.buttons) {
       expect(button.left).toBeGreaterThanOrEqual(0);
       expect(button.right).toBeLessThanOrEqual(width);
-      expect(button.height).toBeGreaterThanOrEqual(48);
+      expect(button.height).toBeGreaterThanOrEqual(compact ? 44 : 48);
       expect(button.scrollWidth).toBeLessThanOrEqual(button.clientWidth + 1);
     }
-    expect(Math.abs(first.width - second.width)).toBeLessThan(1);
-    if (width > 1000) {
+    if (compact) {
+      expect(geometry.navigation.top).toBeGreaterThanOrEqual(geometry.wordmark.bottom);
+      expect(geometry.navigation.top).toBeGreaterThanOrEqual(geometry.controls.bottom);
+      const [projects, ai, work, contact] = geometry.links;
+      expect(projects.left).toBeCloseTo(geometry.navigation.left, 0);
+      expect(ai.left).toBeGreaterThanOrEqual(projects.right + 7);
+      expect(work.left).toBeGreaterThanOrEqual(ai.right + 7);
+      expect(contact.left).toBeGreaterThanOrEqual(work.right + 7);
+      expect(contact.right).toBeCloseTo(geometry.navigation.right, 0);
+      for (const link of geometry.links) { expect(link.top).toBeCloseTo(first.top, 0); expect(link.height).toBeGreaterThanOrEqual(44); expect(link.width).toBeGreaterThanOrEqual(44); }
+    } else if (width > 1000) {
+      expect(Math.abs(first.width - second.width)).toBeLessThan(1);
       expect(geometry.navigation.left).toBeGreaterThanOrEqual(geometry.copy.right + 31);
       expect(Math.abs(first.left - second.left)).toBeLessThan(1);
       expect(second.top).toBeGreaterThanOrEqual(first.bottom + 11);
       expect(first.top).toBeLessThan(geometry.actions.top);
     } else {
+      expect(Math.abs(first.width - second.width)).toBeLessThan(1);
       expect(geometry.navigation.top).toBeGreaterThanOrEqual(geometry.actions.bottom + 23);
       expect(Math.abs(first.top - second.top)).toBeLessThan(1);
       expect(second.left).toBeGreaterThanOrEqual(first.right + 11);
@@ -69,7 +88,7 @@ for (const javaScriptEnabled of [true, false]) {
       for (const { code, path, projects } of locales) {
         await page.goto(`http://127.0.0.1:4180/${path}${code === 'en' ? '?lang=en' : ''}`);
         if (javaScriptEnabled && code === 'en') await page.locator('.theme-toggle').click();
-        await page.locator('.hero-navigation a').first().click();
+        await page.locator('.site-nav .compact-page-link').first().click();
         await expect(page).toHaveURL(`http://127.0.0.1:4180/${path}projects/`);
         await expect(page.locator('html')).toHaveAttribute('lang', code);
         if (javaScriptEnabled) await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
@@ -79,7 +98,7 @@ for (const javaScriptEnabled of [true, false]) {
         await expect(page).toHaveURL(`http://127.0.0.1:4180/${path}ai/`);
         await page.locator('.wordmark').click();
         await expect(page.locator('html')).toHaveAttribute('data-page', 'home');
-        await page.locator('.hero-navigation a').last().click();
+        await page.locator('.site-nav .compact-page-link').last().click();
         await expect(page).toHaveURL(`http://127.0.0.1:4180/${path}ai/`);
         if (javaScriptEnabled) await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
       }
@@ -87,9 +106,10 @@ for (const javaScriptEnabled of [true, false]) {
   });
 }
 
-test('hero navigation supports keyboard activation and is omitted from printing', async ({ page }, info) => {
+for (const width of [390, 1440]) test(`responsive page navigation supports keyboard activation and printing at ${width}px`, async ({ page }, info) => {
+  await page.setViewportSize({ width, height: 900 });
   await page.goto('/uk/');
-  const buttons = page.locator('.hero-navigation a');
+  const buttons = page.locator(width <= 600 ? '.compact-page-link' : '.hero-navigation a');
   await buttons.first().focus();
   await page.keyboard.press(process.platform === 'darwin' && info.project.name === 'webkit' ? 'Alt+Tab' : 'Tab');
   await expect(buttons.last()).toBeFocused();
@@ -98,4 +118,5 @@ test('hero navigation supports keyboard activation and is omitted from printing'
   await page.locator('.wordmark').click();
   await page.emulateMedia({ media: 'print' });
   await expect(page.locator('.hero-navigation')).toBeHidden();
+  await expect(page.locator('.site-header')).toBeHidden();
 });

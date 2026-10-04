@@ -36,7 +36,7 @@ for (const locale of locales) {
         const metrics = await page.evaluate(() => ({
           overflow: document.documentElement.scrollWidth - innerWidth,
           themeWidth: document.querySelector('.theme-toggle').getBoundingClientRect().width,
-          controls: [...document.querySelectorAll('.theme-toggle, .language-switcher summary, .site-nav a')].map(el => {
+          controls: [...document.querySelectorAll('.theme-toggle, .language-switcher summary, .site-nav a')].filter(el => el.getClientRects().length).map(el => {
             const rect = el.getBoundingClientRect();
             return { width: rect.width, height: rect.height, left: rect.left, right: rect.right };
           }),

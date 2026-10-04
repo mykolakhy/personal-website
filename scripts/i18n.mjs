@@ -86,8 +86,10 @@ export function renderPage(template, code, catalog = interfaceEnglish, githubSna
     if (!sources?.has(page.source)) throw new Error(`Missing page template: ${page.source}`);
     html = html.replace(/(<main id="main" tabindex="-1">)[\s\S]*?(<\/main>)/, (_, start, end) => `${start}\n${sources.get(page.source).toString('utf8')}  ${end}`);
   }
-  // Home promotes these destinations in the hero; detail pages retain their
-  // current-page indicator and direct navigation between Projects and AI.
+  // Home uses responsive, CSS-only destinations: compact header links on
+  // mobile and hero shortcuts on larger screens. DOM order matches tab order.
+  html = html.replace('<!-- compact-page-navigation -->', pageKey !== 'home' ? '' : '<a class="compact-page-link" data-route="projects" href="./projects/"><span data-i18n="nav.projects">Projects</span><span aria-hidden="true">→</span></a><a class="compact-page-link" data-route="ai" href="./ai/"><span data-i18n="nav.ai">AI</span><span aria-hidden="true">→</span></a>');
+  // Detail pages retain their current-page indicator and direct navigation.
   html = html.replace('<!-- secondary-page-navigation -->', pageKey === 'home' ? '' : '<a data-i18n="nav.projects" data-route="projects" href="./projects/">Projects</a><a data-i18n="nav.ai" data-route="ai" href="./ai/">AI</a>');
   html = html.replace('<html lang="en">', `<html lang="${code}" data-page="${pageKey}">`);
   if (code !== 'en') {
@@ -146,7 +148,7 @@ export function renderNotFound(code, catalog, homeRoot = '/') {
   <title>${text('404.title')}</title>
   <link rel="icon" type="image/svg+xml" href="${root}assets/favicon.svg" />
   <script src="${root}theme.js?v=20261002-1"></script>
-  <link rel="stylesheet" href="${root}styles.css?v=20261004-3" />
+  <link rel="stylesheet" href="${root}styles.css?v=20261004-4" />
 </head>
 <body>
   <header class="site-header"><div class="container header-inner"><a class="wordmark" href="${home}">mykola<span>/</span>qa</a><div class="header-controls">${themeToggle(catalog)}</div></div></header>

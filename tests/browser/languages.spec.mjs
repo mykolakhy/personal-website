@@ -83,7 +83,7 @@ for (const locale of locales) {
             const rect = el.getBoundingClientRect();
             return { inert: el.inert, covered: rect.left < menu.right && rect.right > menu.left && rect.top < menu.bottom && rect.bottom > menu.top };
           }),
-          targets: [...document.querySelectorAll('.site-nav a, .wordmark, .language-switcher summary, .language-list a')].map(el => {
+          targets: [...document.querySelectorAll('.site-nav a, .wordmark, .language-switcher summary, .language-list a')].filter(el => el.getClientRects().length).map(el => {
             const rect = el.getBoundingClientRect(); return { left: rect.left, right: rect.right, height: rect.height };
           }),
         };
