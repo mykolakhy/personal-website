@@ -126,6 +126,13 @@ for (const code of Object.keys(titles)) for (const theme of ['light', 'dark']) f
     await expect(section.getByRole('heading', { name: 'Claude Code.', exact: true })).toBeVisible();
     await expect(section.locator('.eyebrow')).toHaveText(claudeLabels[code]);
     await expect(section.locator('.claude-coverage p')).toHaveCount(1);
+    const coverageStyle = await section.locator('.claude-coverage').evaluate(element => ({
+      background: getComputedStyle(element).backgroundColor,
+      border: getComputedStyle(element).borderLeftWidth,
+      padding: getComputedStyle(element).padding,
+      fontSize: parseFloat(getComputedStyle(element.querySelector('p')).fontSize),
+    }));
+    expect(coverageStyle).toEqual({ background: 'rgba(0, 0, 0, 0)', border: '0px', padding: '0px', fontSize: 12 });
     for (const [key, value] of Object.entries(claude.summary)) await expect(section.locator(`[data-claude-metric="${key}"] data`)).toHaveAttribute('value', String(value));
     await expect(section.locator('[data-claude-through]')).toHaveAttribute('datetime', claude.computedThrough);
     await expect(section.locator('.ai-stats-updated time')).toHaveAttribute('datetime', claude.updatedAt);
