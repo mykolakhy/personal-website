@@ -1,5 +1,6 @@
 import { githubEnglish, renderGithub } from './github-section.mjs';
 import { aiEnglish, renderAIStats } from './ai-section.mjs';
+import { claudeEnglish, renderClaudeStats } from './claude-section.mjs';
 
 export const languages = [
   { code: 'en', label: 'English', short: 'EN', path: '' },
@@ -19,13 +20,14 @@ export const escapeHTML = (value) => value.replaceAll('&', '&amp;').replaceAll('
 const interfaceEnglish = {
   ...githubEnglish,
   ...aiEnglish,
+  ...claudeEnglish,
   'language.label': 'Change language',
   'theme.light': 'Switch to light theme',
   'theme.dark': 'Switch to dark theme',
   'meta.projectsTitle': 'Projects — Mykola Khytra',
   'meta.projectsDescription': 'Public projects by Mykola Khytra: tools, source code, GitHub activity, and the tests behind this QA portfolio.',
   'meta.aiTitle': 'AI-assisted QA — Mykola Khytra',
-  'meta.aiDescription': 'How Mykola Khytra uses Claude Code and Codex in QA, with a dated snapshot of profile token usage and monthly activity.',
+  'meta.aiDescription': 'How Mykola Khytra uses Claude Code and Codex for QA, with separate activity snapshots for ChatGPT / Codex and Claude Code.',
   '404.title': 'Page not found — Mykola Khytra',
   '404.heading': 'Page not found',
   '404.body': "This page does not exist. Let's get you back to the portfolio.",
@@ -73,7 +75,7 @@ export function themeToggle(catalog = interfaceEnglish) {
       </button>`;
 }
 
-export function renderPage(template, code, catalog = interfaceEnglish, githubSnapshot = null, aiSnapshot = null, { page: pageKey = 'home', sources } = {}) {
+export function renderPage(template, code, catalog = interfaceEnglish, githubSnapshot = null, aiSnapshot = null, { page: pageKey = 'home', sources, claudeSnapshot = null } = {}) {
   const language = languages.find((language) => language.code === code);
   if (!language) throw new Error(`Unsupported language: ${code}`);
   const page = pages.find(page => page.key === pageKey);
@@ -84,8 +86,10 @@ export function renderPage(template, code, catalog = interfaceEnglish, githubSna
     if (!sources?.has(page.source)) throw new Error(`Missing page template: ${page.source}`);
     html = html.replace(/(<main id="main" tabindex="-1">)[\s\S]*?(<\/main>)/, (_, start, end) => `${start}\n${sources.get(page.source).toString('utf8')}  ${end}`);
   }
-  // Home promotes these destinations in the hero; detail pages retain their
-  // current-page indicator and direct navigation between Projects and AI.
+  // Home uses responsive, CSS-only destinations: compact header links on
+  // mobile and hero shortcuts on larger screens. DOM order matches tab order.
+  html = html.replace('<!-- compact-page-navigation -->', pageKey !== 'home' ? '' : '<a class="compact-page-link" data-route="projects" href="./projects/"><span data-i18n="nav.projects">Projects</span><span aria-hidden="true">→</span></a><a class="compact-page-link" data-route="ai" href="./ai/"><span data-i18n="nav.ai">AI</span><span aria-hidden="true">→</span></a>');
+  // Detail pages retain their current-page indicator and direct navigation.
   html = html.replace('<!-- secondary-page-navigation -->', pageKey === 'home' ? '' : '<a data-i18n="nav.projects" data-route="projects" href="./projects/">Projects</a><a data-i18n="nav.ai" data-route="ai" href="./ai/">AI</a>');
   html = html.replace('<html lang="en">', `<html lang="${code}" data-page="${pageKey}">`);
   if (code !== 'en') {
@@ -122,6 +126,7 @@ export function renderPage(template, code, catalog = interfaceEnglish, githubSna
   html = html.replace(/<!-- theme-toggle -->[\s\S]*?<!-- \/theme-toggle -->/, () => themeToggle(catalog));
   html = html.replace(/<!-- github-data -->[\s\S]*?<!-- \/github-data -->/, () => renderGithub(githubSnapshot, code, catalog));
   html = html.replace(/<!-- ai-data -->[\s\S]*?<!-- \/ai-data -->/, () => renderAIStats(aiSnapshot, code, catalog));
+  html = html.replace(/<!-- claude-data -->[\s\S]*?<!-- \/claude-data -->/, () => renderClaudeStats(claudeSnapshot, code, catalog));
   // Markers are authoring-only; deployment needs no catalogs or client renderer.
   return html.replace(/\sdata-i18n(?:-content|-alt|-aria-label)?="[\w.-]+"/g, '');
 }
@@ -143,7 +148,7 @@ export function renderNotFound(code, catalog, homeRoot = '/') {
   <title>${text('404.title')}</title>
   <link rel="icon" type="image/svg+xml" href="${root}assets/favicon.svg" />
   <script src="${root}theme.js?v=20261002-1"></script>
-  <link rel="stylesheet" href="${root}styles.css?v=20261003-1" />
+  <link rel="stylesheet" href="${root}styles.css?v=20261004-6" />
 </head>
 <body>
   <header class="site-header"><div class="container header-inner"><a class="wordmark" href="${home}">mykola<span>/</span>qa</a><div class="header-controls">${themeToggle(catalog)}</div></div></header>

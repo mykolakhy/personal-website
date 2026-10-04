@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { readFile } from 'node:fs/promises';
 import { monthlyActivity } from '../../scripts/github-section.mjs';
+import { layoutCoverage } from './coverage.mjs';
 const snapshot = JSON.parse(await readFile('data/github-stats.json', 'utf8'));
 const labels = {
   en: { title: 'Code you can explore.', monthly: 'Explore activity by month', method: 'What these numbers mean' },
@@ -10,7 +11,7 @@ const labels = {
   de: { title: 'Code zum Erkunden.', monthly: 'Aktivität nach Monaten ansehen', method: 'Was diese Zahlen bedeuten' },
 };
 for (const code of Object.keys(labels)) for (const theme of ['light', 'dark']) for (const width of [320, 1440]) {
-  test(`${code} GitHub activity in ${theme} at ${width}px is accurate, accessible and local`, async ({ page }) => {
+  test(`${code} GitHub activity in ${theme} at ${width}px is accurate, accessible and local`, layoutCoverage({ width, theme }), async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.emulateMedia({ colorScheme: theme });
     const errors = [], external = [];

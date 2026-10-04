@@ -19,7 +19,7 @@
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
   <link rel="preload" href="./assets/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
   <script src="./theme.js?v=20261002-1"></script>
-  <link rel="stylesheet" href="./styles.css?v=20261003-1" />
+  <link rel="stylesheet" href="./styles.css?v=20261004-6" />
   <!-- Production metadata is added by the build when a real URL is configured. -->
 </head>
 <body>
@@ -27,7 +27,7 @@
   <header class="site-header">
     <div class="container header-inner">
       <a class="wordmark" data-route="home" href="#top" data-i18n-aria-label="homeLabel" aria-label="Mykola Khytra home">mykola<span>/</span>qa</a>
-      <nav class="site-nav" data-i18n-aria-label="navLabel" aria-label="Primary navigation"><a data-i18n="nav.work" data-route="home" href="#work">Work</a><!-- secondary-page-navigation --><a data-i18n="contact.label" data-route="home" href="#contact">Contact</a></nav>
+      <nav class="site-nav" data-i18n-aria-label="navLabel" aria-label="Primary navigation"><!-- compact-page-navigation --><a class="nav-work" data-i18n="nav.work" data-route="home" href="#work">Work</a><!-- secondary-page-navigation --><a data-i18n="contact.label" data-route="home" href="#contact">Contact</a></nav>
       <a class="header-status" data-route="home" href="#contact"><span class="status-dot" aria-hidden="true"></span><span data-i18n="status">Open to senior QA roles</span></a>
       <div class="header-controls">
         <!-- theme-toggle -->
@@ -166,7 +166,7 @@
         <div class="section-heading-row"><div><p data-i18n="explore.label" class="eyebrow">Explore further</p><h2 data-i18n="explore.title" id="explore-title">Projects and AI,<br /> in practice.</h2></div><p data-i18n="explore.intro" class="section-intro">A closer look at the tools, experiments, and workflows behind the work.</p></div>
         <div class="explore-grid">
           <article id="github" class="card explore-card"><h3 data-i18n="explore.projectsTitle">Public projects</h3><p data-i18n="explore.projectsBody">Personal tools and experiments, source code, GitHub activity, and the checks behind this site.</p><a class="text-link" data-route="projects" href="./projects/"><span data-i18n="page.projects">Explore the projects</span><span aria-hidden="true">→</span></a></article>
-          <article id="ai-activity" class="card explore-card"><span id="ai-workflow" class="anchor-alias" aria-hidden="true"></span><h3 data-i18n="explore.aiTitle">AI-assisted work</h3><p data-i18n="explore.aiBody">How Claude Code and Codex support everyday QA, with a dated snapshot of profile activity.</p><a class="text-link" data-route="ai" href="./ai/"><span data-i18n="page.ai">Explore my AI workflow</span><span aria-hidden="true">→</span></a></article>
+          <article id="ai-activity" class="card explore-card"><span id="ai-workflow" class="anchor-alias" aria-hidden="true"></span><h3 data-i18n="explore.aiTitle">AI-assisted work</h3><p data-i18n="explore.aiBody">My QA workflow with Claude Code and Codex, plus separate activity statistics.</p><a class="text-link" data-route="ai" href="./ai/"><span data-i18n="page.ai">Explore my AI workflow</span><span aria-hidden="true">→</span></a></article>
         </div>
       </div>
     </section>

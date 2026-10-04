@@ -7,9 +7,10 @@ import { publicFiles, securityHeaders } from './public-files.mjs';
 import { languages, pages, pageTemplateFiles, translationFiles, generatedPages, readCatalogs, renderPage, renderNotFound, escapeHTML } from './i18n.mjs';
 import { githubStatsFiles, validateSnapshot, latestSnapshot } from './github-data.mjs';
 import { aiStatsFiles, validateAISnapshot, latestAISnapshot } from './ai-data.mjs';
+import { claudeStatsFiles, validateClaudeSnapshot, latestClaudeSnapshot } from './claude-data.mjs';
 
 const root = resolve(import.meta.dirname, '..');
-export async function publicSourceBytes(files = [...publicFiles, ...pageTemplateFiles, ...translationFiles, ...githubStatsFiles, ...aiStatsFiles]) {
+export async function publicSourceBytes(files = [...publicFiles, ...pageTemplateFiles, ...translationFiles, ...githubStatsFiles, ...aiStatsFiles, ...claudeStatsFiles]) {
   const sourceRoot = await realpath(root);
   const sources = new Map();
   // Validate and snapshot all sources before touching output. Never reopen them
@@ -50,11 +51,13 @@ export async function build({ destination = resolve(root, 'dist'), siteURL = pro
   const github = refreshGithub ? await latestSnapshot(savedGithub) : savedGithub;
   const savedAI = validateAISnapshot(JSON.parse(sources.get(aiStatsFiles[0]).toString('utf8')));
   const ai = refreshAI ? await latestAISnapshot(savedAI) : savedAI;
+  const savedClaude = validateClaudeSnapshot(JSON.parse(sources.get(claudeStatsFiles[0]).toString('utf8')));
+  const claude = refreshAI ? await latestClaudeSnapshot(savedClaude) : savedClaude;
   const rendered = new Map();
   const scriptHashes = [];
   for (const { code, path } of languages) {
     for (const page of pages) {
-      let html = renderPage(template, code, catalogs.get(code), github, ai, { page: page.key, sources });
+      let html = renderPage(template, code, catalogs.get(code), github, ai, { page: page.key, sources, claudeSnapshot: claude });
       if (base) {
         const canonical = new URL(path + page.path, base).href;
         const image = new URL('assets/social-preview.png', base).href;

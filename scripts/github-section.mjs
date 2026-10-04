@@ -34,7 +34,7 @@ export const githubEnglish = {
   'github.pushed': 'Latest repository push',
   'github.qualityTitle': 'This site is tested too.',
   'github.qualityBody': 'The portfolio is also a working example of how I approach verification and delivery.',
-  'github.browsers': 'Chromium, Firefox, and WebKit browser checks',
+  'github.browsers': 'Chromium and WebKit browser checks',
   'github.responsive': 'Responsive layouts, four languages, and both themes',
   'github.accessibility': 'Accessibility checks, keyboard navigation, and no-JavaScript behavior',
   'github.boundaries': 'Content, asset, build, and server security checks',

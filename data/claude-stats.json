@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "source": "claude-code-local-cache",
+  "updatedAt": "2026-10-03T19:09:25.806Z",
+  "computedThrough": "2026-09-30",
+  "coverageStart": "2026-08-13",
+  "summary": {
+    "sessions": 42,
+    "activeDays": 36,
+    "inputTokens": 89235,
+    "outputTokens": 23324856,
+    "cacheReadInputTokens": 20602660609,
+    "cacheCreationInputTokens": 349694225
+  },
+  "models": [
+    "claude-opus-5-5",
+    "claude-sonnet-5"
+  ],
+  "months": [
+    {
+      "month": "2026-09",
+      "sessions": 18,
+      "activeDays": 21
+    },
+    {
+      "month": "2026-08",
+      "sessions": 24,
+      "activeDays": 15
+    },
+    {
+      "month": "2026-07",
+      "sessions": null,
+      "activeDays": null
+    },
+    {
+      "month": "2026-06",
+      "sessions": null,
+      "activeDays": null
+    },
+    {
+      "month": "2026-05",
+      "sessions": null,
+      "activeDays": null
+    },
+    {
+      "month": "2026-04",
+      "sessions": null,
+      "activeDays": null
+    },
+    {
+      "month": "2026-03",
+      "sessions": null,
+      "activeDays": null
+    },
+    {
+      "month": "2026-02",
+      "sessions": null,
+      "activeDays": null
+    },
+    {
+      "month": "2026-01",
+      "sessions": null,
+      "activeDays": null
+    },
+    {
+      "month": "2025-12",
+      "sessions": null,
+      "activeDays": null
+    },
+    {
+      "month": "2025-11",
+      "sessions": null,
+      "activeDays": null
+    },
+    {
+      "month": "2025-10",
+      "sessions": null,
+      "activeDays": null
+    }
+  ]
+}

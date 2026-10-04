@@ -8,6 +8,7 @@ import { publicFiles } from '../scripts/public-files.mjs';
 import { translationFiles, pageTemplateFiles } from '../scripts/i18n.mjs';
 import { githubStatsFiles } from '../scripts/github-data.mjs';
 import { aiStatsFiles } from '../scripts/ai-data.mjs';
+import { claudeStatsFiles } from '../scripts/claude-data.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const privateMarker = 'Synthetic private data must never reach the build.\n';
@@ -26,7 +27,7 @@ async function fixture(context, { linkedFile, linkedDirectory, missingFile, dire
     await mkdir(dirname(target), { recursive: true });
     await symlink(privateDirectory, target, 'dir');
   }
-  for (const file of ['scripts/build.mjs', 'scripts/public-files.mjs', 'scripts/i18n.mjs', 'scripts/github-data.mjs', 'scripts/github-section.mjs', 'scripts/ai-data.mjs', 'scripts/ai-section.mjs', ...publicFiles, ...pageTemplateFiles, ...translationFiles, ...githubStatsFiles, ...aiStatsFiles]) {
+  for (const file of ['scripts/build.mjs', 'scripts/public-files.mjs', 'scripts/i18n.mjs', 'scripts/github-data.mjs', 'scripts/github-section.mjs', 'scripts/ai-data.mjs', 'scripts/ai-section.mjs', 'scripts/ai-months.mjs', 'scripts/claude-data.mjs', 'scripts/claude-section.mjs', ...publicFiles, ...pageTemplateFiles, ...translationFiles, ...githubStatsFiles, ...aiStatsFiles, ...claudeStatsFiles]) {
     if (file === missingFile) continue;
     const target = resolve(source, file);
     await mkdir(dirname(target), { recursive: true });
@@ -62,6 +63,7 @@ for (const [name, options] of [
   ['secondary page template linked to private data', { linkedFile: 'pages/ai.html' }],
   ['secondary page directory linked outside the source tree', { linkedDirectory: 'pages' }],
   ['AI snapshot linked to private data', { linkedFile: 'data/ai-stats.json' }],
+  ['Claude snapshot linked to private data', { linkedFile: 'data/claude-stats.json' }],
 ]) {
   test(`build rejects ${name} before creating output`, async (context) => {
     const { build, destination } = await fixture(context, options);
@@ -112,6 +114,18 @@ test('AI snapshots with private fields are rejected before changing output', asy
   await mkdir(destination);
   await writeFile(resolve(destination, 'index.html'), 'Previously built public content.');
   await assert.rejects(build(), /Invalid public AI snapshot/);
+  assert.equal(await readFile(resolve(destination, 'index.html'), 'utf8'), 'Previously built public content.');
+  assert.deepEqual(await readdir(destination), ['index.html']);
+});
+
+test('Claude snapshots with private fields are rejected before changing output', async context => {
+  const { source, build, destination } = await fixture(context);
+  const snapshot = JSON.parse(await readFile(resolve(source, 'data/claude-stats.json'), 'utf8'));
+  snapshot.longestSession = { sessionId: privateMarker };
+  await writeFile(resolve(source, 'data/claude-stats.json'), JSON.stringify(snapshot));
+  await mkdir(destination);
+  await writeFile(resolve(destination, 'index.html'), 'Previously built public content.');
+  await assert.rejects(build(), /Invalid public Claude snapshot/);
   assert.equal(await readFile(resolve(destination, 'index.html'), 'utf8'), 'Previously built public content.');
   assert.deepEqual(await readdir(destination), ['index.html']);
 });

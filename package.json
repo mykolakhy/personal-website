@@ -12,6 +12,7 @@
     "build:pages": "node scripts/build-pages.mjs",
     "refresh:github": "node scripts/github-data.mjs",
     "refresh:ai": "node scripts/collect-ai-stats.mjs",
+    "refresh:claude": "node scripts/collect-claude-stats.mjs",
     "publish:ai": "node scripts/publish-ai-stats.mjs",
     "preview": "node scripts/serve.mjs --dir dist",
     "prepare:assets": "node scripts/prepare-assets.mjs",

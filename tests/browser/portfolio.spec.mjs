@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { layoutCoverage } from './coverage.mjs';
 
 test('all sections, resources and local navigation work without errors', async ({ page }) => {
   const errors = [];
@@ -48,14 +49,14 @@ test('all sections, resources and local navigation work without errors', async (
 });
 
 for (const width of [320, 375, 390, 600, 768, 800, 801, 1024, 1440]) {
-  test(`responsive layout and full contacts at ${width}px`, async ({ page }) => {
+  test(`responsive layout and full contacts at ${width}px`, layoutCoverage({ width, webkitBoundary: width === 800 || width === 801 }), async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');
     await page.evaluate(() => document.fonts.ready);
     for (const id of ['ci-case', 'api-case', 'team-case']) await page.locator(`#${id} summary`).click();
     const metrics = await page.evaluate(() => {
       const measure = (selector) => { const element = document.querySelector(selector); const rect = element.getBoundingClientRect(); return { width: rect.width, height: rect.height, top: rect.top, style: getComputedStyle(element).textOverflow, scrollWidth: element.scrollWidth, clientWidth: element.clientWidth }; };
-      return { width: innerWidth, scrollWidth: document.documentElement.scrollWidth, header: [...document.querySelectorAll('.site-nav a, .wordmark')].map((el) => ({ height: el.getBoundingClientRect().height, right: el.getBoundingClientRect().right })), expertise: [...document.querySelectorAll('#expertise .tool-group')].map(el => ({ left: el.getBoundingClientRect().left, right: el.getBoundingClientRect().right })), aiLink: measure('.hero-ai a'), email: measure('.contact-link strong'), portrait: measure('.portrait-frame'), about: measure('.about-copy'), h1: measure('h1') };
+      return { width: innerWidth, scrollWidth: document.documentElement.scrollWidth, header: [...document.querySelectorAll('.site-nav a, .wordmark')].filter(el => el.getClientRects().length).map((el) => ({ height: el.getBoundingClientRect().height, right: el.getBoundingClientRect().right })), expertise: [...document.querySelectorAll('#expertise .tool-group')].map(el => ({ left: el.getBoundingClientRect().left, right: el.getBoundingClientRect().right })), aiLink: measure('.hero-ai a'), email: measure('.contact-link strong'), portrait: measure('.portrait-frame'), about: measure('.about-copy'), h1: measure('h1') };
     });
     expect(metrics.width).toBe(width);
     expect(metrics.scrollWidth).toBeLessThanOrEqual(width + 1);

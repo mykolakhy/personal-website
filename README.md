@@ -53,6 +53,7 @@ symlinked sources and unexpected output files.
 | Theme preference and switching | [theme.js](theme.js) |
 | Public GitHub data and its collection/rendering | [data/github-stats.json](data/github-stats.json), [scripts/github-data.mjs](scripts/github-data.mjs), [scripts/github-section.mjs](scripts/github-section.mjs) |
 | Aggregate ChatGPT/Codex activity | [data/ai-stats.json](data/ai-stats.json), [scripts/ai-data.mjs](scripts/ai-data.mjs), [scripts/ai-section.mjs](scripts/ai-section.mjs) |
+| Aggregate local Claude Code activity | [data/claude-stats.json](data/claude-stats.json), [scripts/claude-data.mjs](scripts/claude-data.mjs), [scripts/claude-section.mjs](scripts/claude-section.mjs) |
 | Images, fonts and downloadable CV | [assets/](assets/) |
 | Deployment allowlist and security headers | [scripts/public-files.mjs](scripts/public-files.mjs) |
 | Build and local server | [scripts/](scripts/) |
@@ -68,7 +69,7 @@ The homepage has seven sections: introduction, about, expertise, selected work,
 experience, two compact page previews, and contact. Professional case disclosures
 stay on the homepage. The projects page (`/projects/`) puts public repositories
 before GitHub activity and site-verification details. The AI page (`/ai/`) contains
-the practical workflow followed by profile statistics. There is no placeholder
+the practical workflow followed by separate ChatGPT/Codex and local Claude Code statistics. There is no placeholder
 notes page; overlapping principles are covered by expertise, cases and the workflow.
 
 All three pages share the same header/footer and produce static HTML in four
@@ -78,10 +79,17 @@ downloads and back links are relative to their generated location, including
 production sites hosted under a subpath. Each page has its own title, description,
 canonical URL and same-page language alternatives.
 
-On the homepage, the header links to Work and Contact. Projects and AI are
-outlined hero buttons: stacked to the right above 1000px, or side by side below
-the main actions on smaller screens. Detail pages retain all four header links
-and highlight the current page. These links also work without JavaScript.
+On the homepage above 600px, the header links to Work and Contact. Projects and AI
+are outlined hero buttons: stacked to the right above 1000px, or side by side
+below the main actions at 601–1000px. At 600px and below, these buttons move to the
+left of the header's second row, with Work and Contact on the right. They share
+the remaining space equally, with right-aligned arrows and the same transparent
+background as the theme/language controls; duplicate hero links are hidden.
+Buttons keep 8px horizontal padding on narrow screens. At 360px and below the
+navigation gaps tighten instead; below 320px Work and Contact wrap into a
+right-aligned row beneath the two full-width buttons without reducing text size.
+Detail pages retain all four header links and highlight
+the current page. These links also work without JavaScript.
 
 Old homepage links to `#github`, `#ai-workflow` and `#ai-activity` redirect to the
 relocated content with JavaScript, preserving the language and query. Without
@@ -202,7 +210,7 @@ inactivity. An unavailable history or metric stays unavailable, not zero.
 The current month is partial, lifetime totals use a different period, and the
 longest task is elapsed task time, not human hours worked. Insights such as skills,
 Fast Mode and reasoning are not included because the verified method does not
-provide them. Other providers, including Claude, are not represented.
+provide them. These figures cover only ChatGPT/Codex; Claude Code has a separate block.
 
 Refresh locally with a supported, signed-in Codex CLI:
 
@@ -226,28 +234,95 @@ npm run publish:ai -- --confirm-publication
 This uploads only validated aggregates to the public `ai-activity` release and
 requests the existing main-branch GitHub refresh/Cloudflare deployment workflow.
 It does not commit to `main`, bypass protections, or create a new account login.
-Publication is manual; no local recurring collector is installed automatically.
+The command itself does not install a scheduler. An owner-approved Codex desktop
+automation can run the collection and publication locally; it requires the Mac
+and app to be available. The configured owner schedule is daily at 23:30
+Europe/Warsaw, with notifications for failed runs only. Scheduled runs use a
+temporary main-branch checkout, never the owner's working files or a direct push.
 Cloudflare production builds use a newer valid public asset when available,
 otherwise the committed dated baseline. Dev, CI and preview builds stay offline.
 Visitors never contact OpenAI, and `connect-src 'none'` is unchanged.
 
 Official source: [Codex App Server](https://learn.chatgpt.com/docs/app-server).
 
+## Local Claude Code activity
+
+The AI page separately shows recorded sessions, active days, models, four distinct
+token categories and twelve monthly session-start cards. Input, output, cache-read
+and cache-creation counters are never combined with OpenAI's total. Active days
+include ongoing-session activity, not just days when a session started.
+
+`npm run refresh:claude` reads only the bounded, regular local
+`~/.claude/stats-cache.json` aggregate file. Supported cache version: 5; unknown
+versions, custom model identifiers, missing counters and invalid dates fail closed.
+The collector does not launch Claude, recalculate its cache, read transcripts,
+copy login files, or require an Anthropic API key. A stale cache stays visibly
+dated: `computedThrough` is its last computed date, while `updatedAt` is import
+time. The recorded period starts at the first-session date. Months before that
+period are unavailable, not fabricated zero-activity months; partial months are
+marked. This is one Mac's retained Claude Code activity, not all Claude.ai or
+all-device account usage. Messages, session IDs, project paths, costs and unverified
+duration counters are deliberately excluded.
+
+Both providers can be published with one deployment request:
+
+```sh
+npm run refresh:ai
+npm run refresh:claude
+npm test
+npm run build
+npm run publish:ai -- --confirm-publication --include-claude
+```
+
+The publisher validates both snapshots before upload. Only `ai-stats.json` and
+`claude-stats.json` aggregates reach the public `ai-activity` release; a single
+main-branch workflow triggers Cloudflare. Production accepts newer valid snapshots
+without credentials, refuses Claude coverage regression, and falls back to the
+committed baseline on errors. Dev/CI/preview remain offline. Neither source JSON
+nor collection scripts are deployed; visitors make no provider API requests.
+The daily automation enables Claude after these scripts are merged into main,
+preserving its existing schedule and failure-only notifications.
+
+References: [Claude Code usage](https://code.claude.com/docs/en/costs),
+[cache token categories](https://platform.claude.com/docs/en/build-with-claude/prompt-caching),
+[Codex scheduled tasks](https://learn.chatgpt.com/docs/automations).
+
 ## Verification
 
 ```sh
 npm test
 npm run build
-npx playwright install --with-deps chromium firefox webkit
+npx playwright install --with-deps chromium webkit
 npm run test:browser
 ```
 
 Install browser binaries on first setup and after Playwright upgrades.
-Checks cover content/assets, build and server boundaries, Chromium/Firefox/WebKit,
+Checks cover content/assets, build and server boundaries, Chromium and WebKit,
 responsive layouts at 320–1440 px, both themes, theme preference persistence,
 accessibility, keyboard navigation, downloads, print, reduced motion and
 no-JavaScript behavior. Automated checks are not a full
-WCAG certification or real-device audit.
+WCAG certification or real-device audit. WebKit checks Safari's browser engine;
+they are not a substitute for testing Safari on real Apple devices.
+
+Chromium runs the full language/theme/viewport matrix. WebKit runs all functional
+scenarios, plus representative layouts in every language (320px dark and 1440px
+light), both sides of the 600px/1000px navigation breakpoints in Ukrainian and
+the 800px about-section breakpoint. Layout tests without a theme parameter keep
+both 320px and 1440px in WebKit; language-button state checks keep both mobile and
+desktop widths in every language. Exact data, privacy assertions, keyboard,
+no-JavaScript, print, theme/language persistence and delayed-style regressions
+remain covered. Firefox is outside the current supported test matrix.
+
+Layout permutations tagged `@chromium-only` are excluded during WebKit test
+discovery, not reported as skipped or hidden by retries. The shared selection
+policy is in `tests/browser/coverage.mjs`. Functional tests are untagged and run
+in both engines. To inspect or run one engine:
+
+```sh
+npm run test:browser -- --list
+npm run test:browser -- --project=chromium
+npm run test:browser -- --project=webkit
+```
 
 GitHub CI runs on PRs targeting `main` and their updates, on pushes to `main`,
 and manually through **Actions → Website CI → Run workflow**. Pushes to working

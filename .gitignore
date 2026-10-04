@@ -4,6 +4,8 @@
 .codex/
 auth.json
 data/.ai-stats-*.tmp
+data/.claude-stats-*.tmp
+.claude/
 !.env.example
 *.pem
 *.key

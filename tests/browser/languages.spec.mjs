@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { layoutCoverage } from './coverage.mjs';
 
 const locales = [
   { code: 'en', path: '/', short: 'EN', contact: 'Contact', cv: 'Download CV' },
@@ -43,7 +44,7 @@ for (const locale of locales) {
     });
   }
   for (const width of [320, 375, 600, 601, 768, 1440]) {
-    test(`${locale.code}: complete accessible layout at ${width}px`, async ({ page }) => {
+    test(`${locale.code}: complete accessible layout at ${width}px`, layoutCoverage({ width }), async ({ page }) => {
       const errors = [];
       page.on('pageerror', error => errors.push(error.message));
       page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
@@ -83,7 +84,7 @@ for (const locale of locales) {
             const rect = el.getBoundingClientRect();
             return { inert: el.inert, covered: rect.left < menu.right && rect.right > menu.left && rect.top < menu.bottom && rect.bottom > menu.top };
           }),
-          targets: [...document.querySelectorAll('.site-nav a, .wordmark, .language-switcher summary, .language-list a')].map(el => {
+          targets: [...document.querySelectorAll('.site-nav a, .wordmark, .language-switcher summary, .language-list a')].filter(el => el.getClientRects().length).map(el => {
             const rect = el.getBoundingClientRect(); return { left: rect.left, right: rect.right, height: rect.height };
           }),
         };

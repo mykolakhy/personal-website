@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { layoutCoverage } from './coverage.mjs';
 
 for (const code of ['en', 'uk', 'it', 'de']) for (const kind of ['projects', 'ai']) for (const theme of ['light', 'dark']) for (const width of [320, 1440]) {
-  test(`${code} ${kind} page is complete and accessible in ${theme} at ${width}px`, async ({ page }) => {
+  test(`${code} ${kind} page is complete and accessible in ${theme} at ${width}px`, layoutCoverage({ width, theme }), async ({ page }) => {
     const errors = [], external = [];
     page.on('pageerror', error => errors.push(error.message));
     page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
@@ -15,7 +16,7 @@ for (const code of ['en', 'uk', 'it', 'de']) for (const kind of ['projects', 'ai
     await expect(page.locator('html')).toHaveAttribute('data-page', kind);
     await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
     await expect(page.locator('h1')).toHaveCount(1);
-    await expect(page.locator('main > section')).toHaveCount(3);
+    await expect(page.locator('main > section')).toHaveCount(kind === 'ai' ? 4 : 3);
     await expect(page.locator('.site-nav a[aria-current="page"]')).toHaveCount(1);
     const labels = await page.locator('.site-nav a').allTextContents();
     expect(new Set(labels).size).toBe(4);
@@ -27,11 +28,13 @@ for (const code of ['en', 'uk', 'it', 'de']) for (const kind of ['projects', 'ai
       await expect(page.locator('#ai-workflow .principle')).toHaveCount(3);
       await expect(page.locator('[data-ai-metric]')).toHaveCount(5);
       await expect(page.locator('[data-ai-month]')).toHaveCount(12);
+      await expect(page.locator('[data-claude-metric]')).toHaveCount(6);
+      await expect(page.locator('[data-claude-month]')).toHaveCount(12);
     }
     await page.locator('.language-switcher summary').click();
     await expect(page.locator('.language-list a')).toHaveCount(4);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
-    const targets = await page.locator('.wordmark,.site-nav a,.theme-toggle,.language-switcher summary,.language-list a,.page-back,.page-next a').evaluateAll(elements => elements.map(el => ({ left: el.getBoundingClientRect().left, right: el.getBoundingClientRect().right, height: el.getBoundingClientRect().height })));
+    const targets = await page.locator('.wordmark,.site-nav a,.theme-toggle,.language-switcher summary,.language-list a,.page-back,.page-next a,.ai-providers a').evaluateAll(elements => elements.map(el => ({ left: el.getBoundingClientRect().left, right: el.getBoundingClientRect().right, height: el.getBoundingClientRect().height })));
     for (const target of targets) { expect(target.left).toBeGreaterThanOrEqual(0); expect(target.right).toBeLessThanOrEqual(width); expect(target.height).toBeGreaterThanOrEqual(44); }
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze()).violations).toEqual([]);
     await page.locator('.language-switcher summary').press('Escape');

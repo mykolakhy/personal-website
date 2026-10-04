@@ -35,7 +35,7 @@ test('AI positioning describes practical agent workflows without unverified expe
   const ai = renderPage(template, 'en', readCatalogs(template, sources).get('en'), null, null, { page: 'ai', sources });
   const workflow = ai.match(/<section id="ai-workflow"([\s\S]*?)<\/section>/)?.[1];
   assert.ok(workflow, 'AI workflow exists');
-  for (const phrase of ['Claude Code and Codex', 'repository analysis', 'test design', 'Understand the context', 'Build and improve', 'Check the result', 'verify behavior manually']) assert.ok(workflow.includes(phrase), phrase);
+  for (const phrase of ['Claude Code and Codex', 'analyzing repositories', 'designing tests', 'Understand the context', 'Build and improve', 'Check the result', 'check behavior manually', 'Technical decisions remain mine']) assert.ok(workflow.includes(phrase), phrase);
   assert.match(html, /href="\.\/ai\/#ai-workflow"><span>See the workflow/);
   assert.match(css, /html \{ scroll-behavior: auto;/, 'anchor navigation must not race with disclosure scrolling');
   const description = html.match(/<meta name="description" content="([^"]+)"/)[1];
