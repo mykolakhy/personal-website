@@ -27,7 +27,7 @@ async function fixture(context, { linkedFile, linkedDirectory, missingFile, dire
     await mkdir(dirname(target), { recursive: true });
     await symlink(privateDirectory, target, 'dir');
   }
-  for (const file of ['scripts/build.mjs', 'scripts/public-files.mjs', 'scripts/i18n.mjs', 'scripts/github-data.mjs', 'scripts/github-section.mjs', 'scripts/ai-data.mjs', 'scripts/ai-section.mjs', 'scripts/claude-data.mjs', 'scripts/claude-section.mjs', ...publicFiles, ...pageTemplateFiles, ...translationFiles, ...githubStatsFiles, ...aiStatsFiles, ...claudeStatsFiles]) {
+  for (const file of ['scripts/build.mjs', 'scripts/public-files.mjs', 'scripts/i18n.mjs', 'scripts/github-data.mjs', 'scripts/github-section.mjs', 'scripts/ai-data.mjs', 'scripts/ai-section.mjs', 'scripts/ai-months.mjs', 'scripts/claude-data.mjs', 'scripts/claude-section.mjs', ...publicFiles, ...pageTemplateFiles, ...translationFiles, ...githubStatsFiles, ...aiStatsFiles, ...claudeStatsFiles]) {
     if (file === missingFile) continue;
     const target = resolve(source, file);
     await mkdir(dirname(target), { recursive: true });

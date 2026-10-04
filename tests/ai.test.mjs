@@ -158,7 +158,7 @@ test('monthly OpenAI cards identify token units and explain the current comparis
     assert.doesNotMatch(html, /\{maximum\}|undefined/);
   }
   const changed = aggregateAIUsage(response(), now);
-  assert.match(renderAIStats(changed, 'en'), /Highest monthly reported token total shown: 1,000\./);
+  assert.match(renderAIStats(changed, 'en'), /Highest monthly reported token total across all 12 months: 1,000\./);
   assert.match(renderAIStats(changed, 'en'), /max="1000" value="1000"/);
   const attack = renderAIStats(saved, 'en', { ...aiEnglish, 'aiStats.scaleNote': '<script>{maximum}</script>' });
   assert.match(attack, /&lt;script&gt;/); assert.doesNotMatch(attack, /<script>/);

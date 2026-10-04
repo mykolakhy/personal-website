@@ -1,6 +1,8 @@
 import { recentMonths, summaryKeys, validateAISnapshot } from './ai-data.mjs';
+import { monthlyEnglish, renderMonthlyHistory } from './ai-months.mjs';
 
 export const aiEnglish = {
+  ...monthlyEnglish,
   'aiStats.label': 'ChatGPT / Codex activity',
   'aiStats.title': 'AI, in numbers.',
   'aiStats.intro': 'Token usage and activity from my ChatGPT / Codex profile.',
@@ -16,7 +18,7 @@ export const aiEnglish = {
   'aiStats.source': 'Source: ChatGPT / Codex profile',
   'aiStats.monthlyTitle': 'Token usage by month',
   'aiStats.monthlyNote': '12 calendar months up to the snapshot date; the latest month in the snapshot is partial. Active days are dates with reported tokens.',
-  'aiStats.scaleNote': 'Highest monthly reported token total shown: {maximum}. The green fill shows the share of that maximum; the unfilled part is the rest of the scale, not inactive days.',
+  'aiStats.scaleNote': 'Highest monthly reported token total across all 12 months: {maximum}. The green fill shows the share of that maximum; the unfilled part is the rest of the scale, not inactive days. Expanding the history does not change the scale.',
   'aiStats.currentMonth': 'Partial month',
   'aiStats.noData': 'No data',
   'aiStats.historyUnavailable': 'Monthly activity is unavailable in this snapshot. Missing data is not shown as zero.',
@@ -54,14 +56,15 @@ export function renderAIStats(snapshot, code, catalog = aiEnglish) {
   const maximum = Math.max(0, ...months.map(month => month.tokens ?? 0));
   const scaleNote = maximum > 0 ? `<p id="ai-month-scale" class="ai-stats-note ai-month-scale">${text('scaleNote').replace('{maximum}', escape(number(maximum)))}</p>` : '';
   const monthly = months.map((month, index) => {
-    const label = new Intl.DateTimeFormat(code, { month: 'short', timeZone: 'UTC' }).format(new Date(`${month.month}-01`));
+    const label = new Intl.DateTimeFormat(code, { month: 'long', timeZone: 'UTC' }).format(new Date(`${month.month}-01`));
     const year = month.month.slice(0, 4);
-    return `<div class="ai-month" data-ai-month="${month.month}"><dt><time datetime="${month.month}">${escape(label)} <span class="ai-month-year">${year}</span></time>${index === 0 ? `<span class="ai-month-partial">${text('currentMonth')}</span>` : ''}</dt><dd class="ai-month-count${month.tokens === null ? ' ai-month-unavailable' : ''}">${month.tokens === null ? text('noData') : `${tokens(month.tokens, 'data-ai-month-tokens')}<span class="ai-month-unit">${text('tokens')}</span>`}</dd><dd class="ai-month-days">${text('activeDays')}: <span>${month.activeDays === null ? '—' : number(month.activeDays)}</span></dd>${month.tokens === null ? '' : `<dd class="ai-month-bar"><meter min="0" max="${Math.max(1, maximum)}" value="${month.tokens}" aria-label="${escape(`${label} ${year}`)}" aria-valuetext="${escape(number(month.tokens))} ${text('tokens')}"${maximum > 0 ? ' aria-describedby="ai-month-scale"' : ''}>${number(month.tokens)}</meter></dd>`}</div>`;
-  }).join('');
+    return `<div class="ai-month" data-ai-month="${month.month}"><dt><time datetime="${month.month}">${escape(label)} <span class="ai-month-year">${year}</span></time>${index === 0 ? `<span class="ai-month-partial">${text('currentMonth')}</span>` : ''}</dt><dd class="ai-month-count${month.tokens === null ? ' ai-month-unavailable' : ''}">${month.tokens === null ? text('noData') : `${tokens(month.tokens, 'data-ai-month-tokens')}<span class="ai-month-unit">${text('tokens')}</span>`}</dd>${month.tokens === null ? '' : `<dd class="ai-month-days"><span class="ai-month-day-count">${number(month.activeDays)}</span><span class="ai-month-day-label">${text('activeDays')}</span></dd><dd class="ai-month-bar"><meter min="0" max="${Math.max(1, maximum)}" value="${month.tokens}" aria-label="${escape(`${label} ${year}`)}" aria-valuetext="${escape(number(month.tokens))} ${text('tokens')}"${maximum > 0 ? ' aria-describedby="ai-month-scale"' : ''}>${number(month.tokens)}</meter></dd>`}</div>`;
+  });
+  const history = renderMonthlyHistory({ id: 'ai', title: catalog['aiStats.monthlyTitle'], cards: monthly, catalog,
+    help: `<p class="ai-stats-note">${text('monthlyNote')}</p>${scaleNote}${snapshot.months === null ? `<p class="ai-stats-note">${text('historyUnavailable')}</p>` : ''}<p>${text('method')}</p>` });
   const updated = new Intl.DateTimeFormat(code, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'UTC' }).format(new Date(snapshot.updatedAt));
   return `<dl class="ai-stats-metrics">${metrics}</dl>
-        <div class="ai-monthly"><h3>${text('monthlyTitle')}</h3><p class="ai-stats-note">${text('monthlyNote')}</p>${scaleNote}${snapshot.months === null ? `<p class="ai-stats-note">${text('historyUnavailable')}</p>` : ''}<dl class="ai-months">${monthly}</dl></div>
+        ${history}
         <p class="ai-stats-note">${text('note')}</p>
-        <p class="ai-stats-updated">${text('source')} · ${text('updated')}: <time datetime="${snapshot.updatedAt}">${escape(updated)} UTC</time></p>
-        <details class="ai-stats-method"><summary>${text('methodTitle')}<span class="disclosure-mark" aria-hidden="true">+</span></summary><div class="detail-body"><p>${text('method')}</p></div></details>`;
+        <p class="ai-stats-updated">${text('source')} · ${text('updated')}: <time datetime="${snapshot.updatedAt}">${escape(updated)} UTC</time></p>`;
 }

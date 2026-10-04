@@ -159,7 +159,7 @@ test('monthly Claude cards label session starts and explain active days and the 
 test('Claude comparison scale follows changing data without inventing a maximum for zero counts', () => {
   const single = sample(); single.summary.sessions = 1; single.months[1].sessions = 1;
   const html = renderClaudeStats(single, 'en');
-  assert.match(html, /Highest monthly session-start count shown: 1\./);
+  assert.match(html, /Highest monthly session-start count across all 12 months: 1\./);
   assert.match(html, /max="1" value="1"/);
   const empty = sample(); empty.summary.sessions = 0; empty.months[1].sessions = 0;
   const zero = renderClaudeStats(empty, 'en');

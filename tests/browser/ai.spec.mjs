@@ -7,6 +7,50 @@ const claude = JSON.parse(await readFile('data/claude-stats.json', 'utf8'));
 const claudeLabels = { en: 'Claude Code activity', uk: 'Активність Claude Code', it: 'Attività con Claude Code', de: 'Aktivität mit Claude Code' };
 const tokenLabels = { en: 'Reported tokens', uk: 'Зафіксовані токени', it: 'Token registrati', de: 'Erfasste Token' };
 const sessionLabels = { en: 'Session starts', uk: 'Розпочаті сесії', it: 'Sessioni avviate', de: 'Gestartete Sitzungen' };
+const historyLabels = {
+  en: ['Show the previous 9 months', 'Hide the previous 9 months'],
+  uk: ['Показати попередні 9 місяців', 'Приховати попередні 9 місяців'],
+  it: ['Mostra i 9 mesi precedenti', 'Nascondi i 9 mesi precedenti'],
+  de: ['Die vorherigen 9 Monate anzeigen', 'Die vorherigen 9 Monate ausblenden'],
+};
+
+async function checkPrintedMonths(section) {
+  // Playwright's WebKit visibility fallback treats closed details as hidden,
+  // even when print CSS exposes ::details-content. Check native paint/layout
+  // visibility instead; the full twelve-card Safari print was also reviewed.
+  const printed = await section.locator('.ai-month').evaluateAll(cards => cards.map(card => ({
+    visible: card.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true, contentVisibilityAuto: true }),
+    width: card.getBoundingClientRect().width, height: card.getBoundingClientRect().height,
+  })));
+  expect(printed).toHaveLength(12);
+  for (const card of printed) { expect(card.visible).toBe(true); expect(card.width).toBeGreaterThan(0); expect(card.height).toBeGreaterThan(0); }
+}
+
+async function checkMonthlyDisclosure(section, code, width) {
+  const history = section.locator('.ai-month-history'), summary = history.locator('summary');
+  await expect(section.locator('.ai-month:visible')).toHaveCount(3);
+  await expect(history).not.toHaveAttribute('open', '');
+  await expect(summary).toHaveAccessibleName(historyLabels[code][0]);
+  expect(await summary.evaluate(element => element.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
+  const arrow = summary.locator('.ai-history-arrow');
+  const closedArrow = await arrow.evaluate(element => ({ color: getComputedStyle(element).color, transform: getComputedStyle(element).transform }));
+  expect(closedArrow.color).toBe(await section.locator('h3').first().evaluate(element => getComputedStyle(element).color));
+  const values = await section.locator('meter').evaluateAll(meters => meters.map(meter => [meter.value, meter.max]));
+  await summary.click();
+  await expect(history).toHaveAttribute('open', '');
+  await expect(summary).toHaveAccessibleName(historyLabels[code][1]);
+  await expect(section.locator('.ai-month:visible')).toHaveCount(12);
+  expect(await arrow.evaluate(element => getComputedStyle(element).transform)).not.toBe(closedArrow.transform);
+  expect(await section.locator('meter').evaluateAll(meters => meters.map(meter => [meter.value, meter.max]))).toEqual(values);
+  const geometry = await section.locator('.ai-month:visible').evaluateAll(cards => cards.map(card => ({ left: card.getBoundingClientRect().left, right: card.getBoundingClientRect().right, overflow: card.scrollWidth - card.clientWidth })));
+  for (const card of geometry) { expect(card.left).toBeGreaterThanOrEqual(0); expect(card.right).toBeLessThanOrEqual(width); expect(card.overflow).toBeLessThanOrEqual(1); }
+  await summary.focus(); await section.page().keyboard.press('Space');
+  await expect(history).not.toHaveAttribute('open', '');
+  await expect(section.locator('.ai-month:visible')).toHaveCount(3);
+  await expect(summary).toHaveAccessibleName(historyLabels[code][0]);
+  await summary.focus(); await section.page().keyboard.press('Enter');
+  await expect(section.locator('.ai-month:visible')).toHaveCount(12);
+}
 
 for (const code of Object.keys(titles)) for (const theme of ['light', 'dark']) for (const width of [320, 768, 1440]) {
   test(`${code} AI statistics in ${theme} at ${width}px show exact local data without overflow`, async ({ page }) => {
@@ -20,6 +64,8 @@ for (const code of Object.keys(titles)) for (const theme of ['light', 'dark']) f
     await expect(page.getByRole('heading', { name: titles[code], exact: true })).toBeVisible();
     for (const [key, value] of Object.entries(snapshot.summary)) await expect(page.locator(`[data-ai-metric="${key}"] data`)).toHaveAttribute('value', String(value));
     await expect(section.locator('.ai-month')).toHaveCount(12);
+    await expect(section.locator('#ai-month-scale')).toBeHidden();
+    await checkMonthlyDisclosure(section, code, width);
     const months = await section.locator('.ai-month').evaluateAll(cards => cards.map(card => ({ month: card.dataset.aiMonth, tokens: Number(card.querySelector('data').value), activeDays: Number(card.querySelector('.ai-month-days span').textContent) })));
     expect(months).toEqual(snapshot.months);
     await expect(section.locator('.ai-month meter')).toHaveCount(12);
@@ -36,7 +82,7 @@ for (const code of Object.keys(titles)) for (const theme of ['light', 'dark']) f
     for (const card of geometry) { expect(card.left).toBeGreaterThanOrEqual(0); expect(card.right).toBeLessThanOrEqual(width); expect(card.overflow).toBeLessThanOrEqual(1); }
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
     const rows = await section.locator('.ai-month').evaluateAll(cards => new Set(cards.map(card => card.getBoundingClientRect().top)).size);
-    expect(rows).toBe(width === 320 ? 6 : width === 768 ? 4 : 3);
+    expect(rows).toBe(width === 320 ? 12 : 4);
     const bars = await section.locator('.ai-month').evaluateAll(cards => cards.map(card => ({ row: card.getBoundingClientRect().top, bar: card.querySelector('meter').getBoundingClientRect().top })));
     for (const row of new Set(bars.map(card => card.row))) expect(new Set(bars.filter(card => card.row === row).map(card => card.bar)).size).toBe(1);
     for (const part of await page.locator('.ai-token-number,.ai-token-unit,.ai-duration-part').evaluateAll(parts => parts.map(part => getComputedStyle(part).whiteSpace))) expect(part).toBe('nowrap');
@@ -52,6 +98,7 @@ test('AI statistics work without JavaScript and disclosures are keyboard accessi
   const page = await context.newPage(); await page.goto('http://127.0.0.1:4180/uk/ai/#ai-activity');
   const section = page.locator('#ai-activity');
   await expect(section.locator('.ai-month')).toHaveCount(12);
+  await checkMonthlyDisclosure(section, 'uk', 375);
   await section.locator('.ai-stats-method summary').focus(); await page.keyboard.press('Enter');
   await expect(section.locator('.ai-stats-method')).toHaveAttribute('open', '');
   await page.keyboard.press('Space'); await expect(section.locator('.ai-stats-method')).not.toHaveAttribute('open', '');
@@ -60,9 +107,10 @@ test('AI statistics work without JavaScript and disclosures are keyboard accessi
 
 test('AI statistics remain readable in forced colors and print', async ({ page }) => {
   await page.goto('/ai/#ai-activity'); await page.emulateMedia({ forcedColors: 'active' });
-  await expect(page.locator('#ai-activity .ai-stats-metrics')).toBeVisible(); await expect(page.locator('#ai-activity .ai-months')).toBeVisible();
+  await expect(page.locator('#ai-activity .ai-stats-metrics')).toBeVisible(); await expect(page.locator('#ai-activity .ai-months-recent')).toBeVisible();
   await page.emulateMedia({ forcedColors: 'none', media: 'print' });
-  await expect(page.locator('#ai-activity .ai-stats-metrics')).toBeVisible(); await expect(page.locator('#ai-activity .ai-months')).toBeVisible();
+  await expect(page.locator('#ai-activity .ai-stats-metrics')).toBeVisible(); await expect(page.locator('#ai-activity .ai-months-recent')).toBeVisible();
+  await checkPrintedMonths(page.locator('#ai-activity'));
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
 });
 
@@ -82,6 +130,8 @@ for (const code of Object.keys(titles)) for (const theme of ['light', 'dark']) f
     await expect(section.locator('[data-claude-through]')).toHaveAttribute('datetime', claude.computedThrough);
     await expect(section.locator('.ai-stats-updated time')).toHaveAttribute('datetime', claude.updatedAt);
     expect(await section.locator('.claude-models code').allTextContents()).toEqual(claude.models);
+    await expect(section.locator('#claude-month-scale')).toBeHidden();
+    await checkMonthlyDisclosure(section, code, width);
     const months = await section.locator('[data-claude-month]').evaluateAll(cards => cards.map(card => ({ month: card.dataset.claudeMonth, sessions: card.querySelector('data') ? Number(card.querySelector('data').value) : null, activeDays: card.querySelector('data') ? Number(card.querySelector('.ai-month-days span').textContent) : null })));
     expect(months).toEqual(claude.months);
     await expect(section.locator('meter')).toHaveCount(claude.months.filter(month => month.sessions !== null).length);
@@ -114,18 +164,21 @@ test('Claude provider links and statistics work without JavaScript and with a ke
   await expect(page).toHaveURL(/#claude-activity$/);
   const section = page.locator('#claude-activity');
   await expect(section.locator('[data-claude-month]')).toHaveCount(12);
-  await section.locator('summary').focus(); await page.keyboard.press('Enter');
-  await expect(section.locator('details')).toHaveAttribute('open','');
+  await checkMonthlyDisclosure(section, 'uk', 375);
+  await section.locator('.ai-stats-method summary').focus(); await page.keyboard.press('Enter');
+  await expect(section.locator('.ai-stats-method')).toHaveAttribute('open','');
   await page.keyboard.press('Escape');
   await context.close();
 });
 
 test('Claude metrics stay visible in forced colors and print', async ({ page }) => {
   await page.goto('/ai/#claude-activity');
+  const section = page.locator('#claude-activity');
   for (const media of [{ forcedColors: 'active' }, { forcedColors: 'none', media: 'print' }]) {
     await page.emulateMedia(media);
     await expect(page.locator('#claude-activity .ai-stats-metrics')).toBeVisible();
-    await expect(page.locator('#claude-activity .ai-months')).toBeVisible();
+    await expect(page.locator('#claude-activity .ai-months-recent')).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+    if (media.media === 'print') await checkPrintedMonths(section);
   }
 });
