@@ -80,7 +80,7 @@
   "github.pushed": "Ultimo push nel repository",
   "github.qualityTitle": "Anche questo sito viene testato.",
   "github.qualityBody": "Il portfolio è anche un esempio concreto del mio approccio alla verifica e alla delivery.",
-  "github.browsers": "Controlli nel browser su Chromium, Firefox e WebKit",
+  "github.browsers": "Controlli nel browser su Chromium e WebKit",
   "github.responsive": "Layout responsive, quattro lingue ed entrambi i temi",
   "github.accessibility": "Controlli di accessibilità, navigazione da tastiera e funzionamento senza JavaScript",
   "github.boundaries": "Controlli su contenuti, risorse e sicurezza di build e server",

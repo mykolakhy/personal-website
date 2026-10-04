@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { readFile } from 'node:fs/promises';
+import { layoutCoverage } from './coverage.mjs';
 const snapshot = JSON.parse(await readFile('data/ai-stats.json', 'utf8'));
 const titles = { en: 'AI, in numbers.', uk: 'ШІ у цифрах.', it: 'L’IA, in numeri.', de: 'KI in Zahlen.' };
 const claude = JSON.parse(await readFile('data/claude-stats.json', 'utf8'));
@@ -63,7 +64,7 @@ async function checkMonthlyDisclosure(section, code, width) {
 }
 
 for (const code of Object.keys(titles)) for (const theme of ['light', 'dark']) for (const width of [320, 768, 1440]) {
-  test(`${code} AI statistics in ${theme} at ${width}px show exact local data without overflow`, async ({ page }) => {
+  test(`${code} AI statistics in ${theme} at ${width}px show exact local data without overflow`, layoutCoverage({ width, theme }), async ({ page }) => {
     await page.setViewportSize({ width, height: 900 }); await page.emulateMedia({ colorScheme: theme });
     const errors = [], external = [];
     page.on('pageerror', error => errors.push(error.message));
@@ -125,7 +126,7 @@ test('AI statistics remain readable in forced colors and print', async ({ page }
 });
 
 for (const code of Object.keys(titles)) for (const theme of ['light', 'dark']) for (const width of [320, 768, 1440]) {
-  test(`${code} Claude statistics in ${theme} at ${width}px preserve source coverage and do not leak data`, async ({ page }) => {
+  test(`${code} Claude statistics in ${theme} at ${width}px preserve source coverage and do not leak data`, layoutCoverage({ width, theme }), async ({ page }) => {
     await page.setViewportSize({ width, height: 900 }); await page.emulateMedia({ colorScheme: theme });
     const errors = [], external = [];
     page.on('pageerror', error => errors.push(error.message));

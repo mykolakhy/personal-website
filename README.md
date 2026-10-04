@@ -79,10 +79,12 @@ downloads and back links are relative to their generated location, including
 production sites hosted under a subpath. Each page has its own title, description,
 canonical URL and same-page language alternatives.
 
-On the homepage, the header links to Work and Contact. Projects and AI are
-outlined hero buttons: stacked to the right above 1000px, or side by side below
-the main actions on smaller screens. Detail pages retain all four header links
-and highlight the current page. These links also work without JavaScript.
+On the homepage above 600px, the header links to Work and Contact. Projects and AI
+are outlined hero buttons: stacked to the right above 1000px, or side by side
+below the main actions at 601–1000px. At 600px and below, these buttons move to the
+left of the header's second row, with Work and Contact on the right; duplicate
+hero links are hidden. Detail pages retain all four header links and highlight
+the current page. These links also work without JavaScript.
 
 Old homepage links to `#github`, `#ai-workflow` and `#ai-activity` redirect to the
 relocated content with JavaScript, preserving the language and query. Without
@@ -285,16 +287,37 @@ References: [Claude Code usage](https://code.claude.com/docs/en/costs),
 ```sh
 npm test
 npm run build
-npx playwright install --with-deps chromium firefox webkit
+npx playwright install --with-deps chromium webkit
 npm run test:browser
 ```
 
 Install browser binaries on first setup and after Playwright upgrades.
-Checks cover content/assets, build and server boundaries, Chromium/Firefox/WebKit,
+Checks cover content/assets, build and server boundaries, Chromium and WebKit,
 responsive layouts at 320–1440 px, both themes, theme preference persistence,
 accessibility, keyboard navigation, downloads, print, reduced motion and
 no-JavaScript behavior. Automated checks are not a full
-WCAG certification or real-device audit.
+WCAG certification or real-device audit. WebKit checks Safari's browser engine;
+they are not a substitute for testing Safari on real Apple devices.
+
+Chromium runs the full language/theme/viewport matrix. WebKit runs all functional
+scenarios, plus representative layouts in every language (320px dark and 1440px
+light), both sides of the 600px/1000px navigation breakpoints in Ukrainian and
+the 800px about-section breakpoint. Layout tests without a theme parameter keep
+both 320px and 1440px in WebKit; language-button state checks keep both mobile and
+desktop widths in every language. Exact data, privacy assertions, keyboard,
+no-JavaScript, print, theme/language persistence and delayed-style regressions
+remain covered. Firefox is outside the current supported test matrix.
+
+Layout permutations tagged `@chromium-only` are excluded during WebKit test
+discovery, not reported as skipped or hidden by retries. The shared selection
+policy is in `tests/browser/coverage.mjs`. Functional tests are untagged and run
+in both engines. To inspect or run one engine:
+
+```sh
+npm run test:browser -- --list
+npm run test:browser -- --project=chromium
+npm run test:browser -- --project=webkit
+```
 
 GitHub CI runs on PRs targeting `main` and their updates, on pushes to `main`,
 and manually through **Actions → Website CI → Run workflow**. Pushes to working

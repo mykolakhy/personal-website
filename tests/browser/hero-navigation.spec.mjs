@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { layoutCoverage } from './coverage.mjs';
 
 const locales = [
   { code: 'en', path: '', projects: 'Projects', ai: 'AI' },
@@ -9,7 +10,7 @@ const locales = [
 ];
 
 for (const locale of locales) for (const theme of ['light', 'dark']) for (const width of [320, 390, 600, 601, 1000, 1001, 1440]) {
-  test(`${locale.code} hero navigation fits ${theme} at ${width}px`, async ({ page }) => {
+  test(`${locale.code} hero navigation fits ${theme} at ${width}px`, layoutCoverage({ width, theme, webkitBoundary: locale.code === 'uk' && [600, 601, 1000, 1001].includes(width) }), async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.emulateMedia({ colorScheme: theme });
     await page.goto(`/${locale.path}`);

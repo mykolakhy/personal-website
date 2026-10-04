@@ -80,7 +80,7 @@
   "github.pushed": "Останній push у репозиторій",
   "github.qualityTitle": "Цей сайт теж проходить перевірки.",
   "github.qualityBody": "Портфоліо — також практичний приклад мого підходу до перевірки й доставки змін.",
-  "github.browsers": "Браузерні перевірки в Chromium, Firefox і WebKit",
+  "github.browsers": "Браузерні перевірки в Chromium і WebKit",
   "github.responsive": "Адаптивне відображення, чотири мови й обидві теми",
   "github.accessibility": "Перевірки доступності, навігації клавіатурою й роботи без JavaScript",
   "github.boundaries": "Перевірки контенту, ресурсів і безпеки збірки та сервера",

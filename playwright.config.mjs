@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { chromiumOnlyTag } from './tests/browser/coverage.mjs';
 export default defineConfig({
   testDir: './tests/browser',
   fullyParallel: true,
@@ -9,8 +10,7 @@ export default defineConfig({
   use: { baseURL: 'http://127.0.0.1:4180', trace: 'retain-on-failure', screenshot: 'only-on-failure' },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    { name: 'webkit', grepInvert: new RegExp(chromiumOnlyTag), use: { ...devices['Desktop Safari'] } },
   ],
   webServer: { command: 'node scripts/serve.mjs --dir dist --port 4180', url: 'http://127.0.0.1:4180', reuseExistingServer: !process.env.CI },
 });

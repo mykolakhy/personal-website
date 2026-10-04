@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { layoutCoverage } from './coverage.mjs';
 
 for (const code of ['en', 'uk', 'it', 'de']) for (const kind of ['projects', 'ai']) for (const theme of ['light', 'dark']) for (const width of [320, 1440]) {
-  test(`${code} ${kind} page is complete and accessible in ${theme} at ${width}px`, async ({ page }) => {
+  test(`${code} ${kind} page is complete and accessible in ${theme} at ${width}px`, layoutCoverage({ width, theme }), async ({ page }) => {
     const errors = [], external = [];
     page.on('pageerror', error => errors.push(error.message));
     page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });

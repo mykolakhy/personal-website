@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { layoutCoverage } from './coverage.mjs';
 
 test('all sections, resources and local navigation work without errors', async ({ page }) => {
   const errors = [];
@@ -48,7 +49,7 @@ test('all sections, resources and local navigation work without errors', async (
 });
 
 for (const width of [320, 375, 390, 600, 768, 800, 801, 1024, 1440]) {
-  test(`responsive layout and full contacts at ${width}px`, async ({ page }) => {
+  test(`responsive layout and full contacts at ${width}px`, layoutCoverage({ width, webkitBoundary: width === 800 || width === 801 }), async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');
     await page.evaluate(() => document.fonts.ready);

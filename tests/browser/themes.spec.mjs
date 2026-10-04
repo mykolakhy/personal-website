@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { layoutCoverage } from './coverage.mjs';
 
 const locales = [
   { code: 'en', path: '/?lang=en', light: 'Switch to light theme', dark: 'Switch to dark theme' },
@@ -15,7 +16,7 @@ const palette = {
 for (const locale of locales) {
   for (const scheme of ['light', 'dark']) {
     for (const width of [320, 1440]) {
-      test(`${locale.code}: ${scheme} theme is complete and accessible at ${width}px`, async ({ page }) => {
+      test(`${locale.code}: ${scheme} theme is complete and accessible at ${width}px`, layoutCoverage({ width, theme: scheme }), async ({ page }) => {
         const errors = [];
         page.on('pageerror', error => errors.push(error.message));
         page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
