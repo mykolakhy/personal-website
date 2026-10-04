@@ -82,8 +82,10 @@ canonical URL and same-page language alternatives.
 On the homepage above 600px, the header links to Work and Contact. Projects and AI
 are outlined hero buttons: stacked to the right above 1000px, or side by side
 below the main actions at 601–1000px. At 600px and below, these buttons move to the
-left of the header's second row, with Work and Contact on the right; duplicate
-hero links are hidden. Detail pages retain all four header links and highlight
+left of the header's second row, with Work and Contact on the right. They share
+the remaining space equally, with right-aligned arrows and the same transparent
+background as the theme/language controls; duplicate hero links are hidden.
+Detail pages retain all four header links and highlight
 the current page. These links also work without JavaScript.
 
 Old homepage links to `#github`, `#ai-workflow` and `#ai-activity` redirect to the

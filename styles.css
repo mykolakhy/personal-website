@@ -335,10 +335,9 @@ details[open] .disclosure-mark { transform: rotate(45deg); }
   .header-controls { grid-column: 2; grid-row: 1; }
   .site-nav { grid-column: 1 / -1; grid-row: 2; min-width: 0; margin-left: 0; justify-content: space-between; gap: 8px; }
   .site-nav a { font-size: 13px; }
-  html[data-page="home"] .site-nav { justify-content: flex-start; gap: 8px; }
+  html[data-page="home"] .site-nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto auto; gap: 8px; }
   html[data-page="home"] .site-nav a { flex-shrink: 0; min-width: 44px; font-size: 12px; white-space: nowrap; }
-  html[data-page="home"] .site-nav .nav-work { margin-left: auto; }
-  .site-nav .compact-page-link { display: inline-flex; flex-shrink: 0; gap: 6px; padding: 0 8px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--bg-surface); }
+  .site-nav .compact-page-link { display: inline-flex; justify-content: space-between; gap: 6px; padding: 0 8px; border: 1px solid var(--border-strong); border-radius: 6px; background: transparent; }
   .site-nav .compact-page-link:hover { border-color: var(--accent); }
   .hero-navigation { display: none; }
   h1 { font-size: clamp(48px, 12vw, 64px); max-width: 9ch; }
@@ -372,6 +371,7 @@ details[open] .disclosure-mark { transform: rotate(45deg); }
   :root { --page-pad: 16px; }
   .site-nav { gap: 4px; }
   .site-nav a { padding: 0 3px; }
+  .site-nav .compact-page-link { gap: 2px; padding: 0 3px; }
   .hero-actions .button { width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) {

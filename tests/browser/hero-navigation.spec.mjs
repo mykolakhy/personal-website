@@ -26,7 +26,7 @@ for (const locale of locales) for (const theme of ['light', 'dark']) for (const 
     await expect(navigation.getByRole('link', { name: locale.projects, exact: true })).toHaveAttribute('href', `${locale.path ? '../' : './'}${locale.path}projects/`);
     await expect(navigation.getByRole('link', { name: locale.ai, exact: true })).toHaveAttribute('href', `${locale.path ? '../' : './'}${locale.path}ai/`);
     for (const button of await destinations.all()) {
-      await expect(button).toHaveCSS('background-color', theme === 'dark' ? 'rgb(17, 21, 27)' : 'rgb(255, 255, 255)');
+      await expect(button).toHaveCSS('background-color', compact ? 'rgba(0, 0, 0, 0)' : theme === 'dark' ? 'rgb(17, 21, 27)' : 'rgb(255, 255, 255)');
       await expect(button).toHaveCSS('color', theme === 'dark' ? 'rgb(237, 241, 245)' : 'rgb(23, 32, 25)');
     }
     const geometry = await page.evaluate(() => {
@@ -44,6 +44,13 @@ for (const locale of locales) for (const theme of ['light', 'dark']) for (const 
         controls: measure(document.querySelector('.header-controls')),
         links: [...document.querySelectorAll('.site-nav a')].filter(el => el.getClientRects().length).map(measure),
         buttons: [...document.querySelectorAll(innerWidth <= 600 ? '.compact-page-link' : '.hero-navigation a')].map(measure),
+        compactParts: [...document.querySelectorAll('.compact-page-link')].map(link => ({
+          label: measure(link.children[0]), arrow: measure(link.children[1]),
+          inset: parseFloat(getComputedStyle(link).paddingLeft) + parseFloat(getComputedStyle(link).borderLeftWidth),
+          background: getComputedStyle(link).backgroundColor,
+        })),
+        themeBackground: getComputedStyle(document.querySelector('.theme-toggle')).backgroundColor,
+        languageBackground: getComputedStyle(document.querySelector('.language-switcher summary')).backgroundColor,
       };
     });
     expect(geometry.scrollWidth).toBeLessThanOrEqual(width + 1);
@@ -58,11 +65,20 @@ for (const locale of locales) for (const theme of ['light', 'dark']) for (const 
       expect(geometry.navigation.top).toBeGreaterThanOrEqual(geometry.wordmark.bottom);
       expect(geometry.navigation.top).toBeGreaterThanOrEqual(geometry.controls.bottom);
       const [projects, ai, work, contact] = geometry.links;
+      expect(Math.abs(projects.width - ai.width)).toBeLessThan(1);
       expect(projects.left).toBeCloseTo(geometry.navigation.left, 0);
-      expect(ai.left).toBeGreaterThanOrEqual(projects.right + 7);
-      expect(work.left).toBeGreaterThanOrEqual(ai.right + 7);
-      expect(contact.left).toBeGreaterThanOrEqual(work.right + 7);
+      expect(ai.left - projects.right).toBeCloseTo(8, 0);
+      expect(work.left - ai.right).toBeCloseTo(8, 0);
+      expect(contact.left - work.right).toBeCloseTo(8, 0);
       expect(contact.right).toBeCloseTo(geometry.navigation.right, 0);
+      for (const [index, part] of geometry.compactParts.entries()) {
+        const button = geometry.buttons[index];
+        expect(part.background).toBe(geometry.themeBackground);
+        expect(part.background).toBe(geometry.languageBackground);
+        expect(part.label.left - button.left).toBeCloseTo(part.inset, 0);
+        expect(button.right - part.arrow.right).toBeCloseTo(part.inset, 0);
+        expect(part.arrow.left - part.label.right).toBeGreaterThanOrEqual(2);
+      }
       for (const link of geometry.links) { expect(link.top).toBeCloseTo(first.top, 0); expect(link.height).toBeGreaterThanOrEqual(44); expect(link.width).toBeGreaterThanOrEqual(44); }
     } else if (width > 1000) {
       expect(Math.abs(first.width - second.width)).toBeLessThan(1);
