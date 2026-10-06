@@ -1,6 +1,7 @@
 import { githubEnglish, renderGithub } from './github-section.mjs';
 import { aiEnglish, renderAIStats } from './ai-section.mjs';
 import { claudeEnglish, renderClaudeStats } from './claude-section.mjs';
+import { arrowUpRight } from './icons.mjs';
 
 export const languages = [
   { code: 'en', label: 'English', short: 'EN', path: '' },
@@ -128,7 +129,7 @@ export function renderPage(template, code, catalog = interfaceEnglish, githubSna
   html = html.replace(/<!-- ai-data -->[\s\S]*?<!-- \/ai-data -->/, () => renderAIStats(aiSnapshot, code, catalog));
   html = html.replace(/<!-- claude-data -->[\s\S]*?<!-- \/claude-data -->/, () => renderClaudeStats(claudeSnapshot, code, catalog));
   // Markers are authoring-only; deployment needs no catalogs or client renderer.
-  return html.replace(/\sdata-i18n(?:-content|-alt|-aria-label)?="[\w.-]+"/g, '');
+  return html.replaceAll('<!-- arrow-up-right -->', arrowUpRight).replace(/\sdata-i18n(?:-content|-alt|-aria-label)?="[\w.-]+"/g, '');
 }
 
 export function renderNotFound(code, catalog, homeRoot = '/') {
@@ -148,7 +149,7 @@ export function renderNotFound(code, catalog, homeRoot = '/') {
   <title>${text('404.title')}</title>
   <link rel="icon" type="image/svg+xml" href="${root}assets/favicon.svg" />
   <script src="${root}theme.js?v=20261002-1"></script>
-  <link rel="stylesheet" href="${root}styles.css?v=20261004-6" />
+  <link rel="stylesheet" href="${root}styles.css?v=20261006-1" />
 </head>
 <body>
   <header class="site-header"><div class="container header-inner"><a class="wordmark" href="${home}">mykola<span>/</span>qa</a><div class="header-controls">${themeToggle(catalog)}</div></div></header>

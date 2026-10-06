@@ -1,4 +1,5 @@
 import { validateSnapshot } from './github-data.mjs';
+import { arrowUpRight } from './icons.mjs';
 
 export const githubEnglish = {
   'github.label': 'GitHub / public projects',
@@ -70,7 +71,7 @@ export function renderGithub(snapshot, code, catalog = githubEnglish) {
   const formatDate = value => new Intl.DateTimeFormat(code, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(value));
   const formatUpdated = value => new Intl.DateTimeFormat(code, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'UTC' }).format(new Date(value));
   const time = value => `<time datetime="${escape(value)}">${escape(formatDate(value))}</time>`;
-  const link = (href, label) => `<a class="text-link" href="${escape(href)}" target="_blank" rel="noopener noreferrer"><span>${label}</span><span aria-hidden="true">↗</span><span class="sr-only">${text('newTab')}</span></a>`;
+  const link = (href, label) => `<a class="text-link" href="${escape(href)}" target="_blank" rel="noopener noreferrer"><span>${label}</span>${arrowUpRight}<span class="sr-only">${text('newTab')}</span></a>`;
   const metrics = ['contributions', 'activeDays', 'pullRequests', 'reviews'].map(key => `<div><dt>${text(key)}</dt><dd data-total="${key}">${number(snapshot.totals[key])}</dd></div>`).join('');
   const cells = [...Array(new Date(snapshot.from).getUTCDay()).fill(null), ...snapshot.days];
   while (cells.length % 7) cells.push(null);

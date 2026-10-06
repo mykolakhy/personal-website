@@ -115,6 +115,8 @@ test('core content and native disclosures work with JavaScript disabled', async 
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
   await page.goto('http://127.0.0.1:4180/');
+  await expect(page.locator('.hero-actions svg.arrow-icon')).toBeVisible();
+  await expect(page.locator('.hero-actions svg.arrow-icon')).toHaveAttribute('focusable', 'false');
   await expect(page.getByRole('heading', { name: 'Manual & product QA', exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'See the workflow', exact: true }).click();
   await expect(page).toHaveURL(/\/ai\/#ai-workflow$/);
