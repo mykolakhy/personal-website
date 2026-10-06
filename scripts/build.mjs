@@ -94,7 +94,8 @@ export async function build({ destination = resolve(root, 'dist'), siteURL = pro
   }
   await writeFile(resolve(destination, 'robots.txt'), base ? `User-agent: *\nAllow: /\nSitemap: ${new URL('sitemap.xml', base).href}\n` : 'User-agent: *\nDisallow: /\n');
   await writeFile(resolve(destination, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${base ? languages.flatMap(({ path }) => pages.map(page => `<url><loc>${escapeHTML(new URL(path + page.path, base).href)}</loc></url>`)).join('') : ''}</urlset>\n`);
-  const headers = { ...securityHeaders(scriptHashes), ...(!base ? { 'X-Robots-Tag': 'noindex, nofollow' } : {}) };
+  const webAnalytics = base?.href === 'https://mykolakhytra.com/';
+  const headers = { ...securityHeaders(scriptHashes, { webAnalytics }), ...(!base ? { 'X-Robots-Tag': 'noindex, nofollow' } : {}) };
   await writeFile(resolve(destination, '_headers'), `/*\n${Object.entries(headers).map(([key, value]) => `  ${key}: ${value}`).join('\n')}\n  Cache-Control: public, max-age=0, must-revalidate\n`);
   return { destination, production: Boolean(base), files: approved.size };
 }
