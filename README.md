@@ -3,7 +3,8 @@
 **Live site: [mykolakhytra.com](https://mykolakhytra.com/)**
 
 A framework-free QA portfolio built with HTML, CSS and vanilla JavaScript.
-Fonts and images are self-hosted; there are no analytics, forms or runtime dependencies.
+Fonts and images are self-hosted; there are no forms or runtime dependencies.
+Production supports Cloudflare Web Analytics through Cloudflare's automatic setup.
 
 ## Local development
 
@@ -102,7 +103,8 @@ the selection locally and keeps the current page and section when switching lang
 On mobile the menu opens directly below its button, over navigation. With
 JavaScript, covered links are temporarily non-interactive until the menu closes.
 Direct localized links take priority over the saved preference; `/?lang=en`
-explicitly selects English. No browser-language detection or tracking is used.
+explicitly selects English. No browser-language detection is used; the saved
+language preference stays in the visitor's browser.
 
 English copy is authored in `index.html`, `pages/`, `scripts/github-section.mjs` and `scripts/ai-section.mjs`; `data-i18n` markers map to plain-text
 keys in the three JSON catalogs. Update all catalogs when changing marked copy.
@@ -138,11 +140,40 @@ Retain the font licenses in
 fingerprint in [tests/site.test.mjs](tests/site.test.mjs). Add new public resources
 to `scripts/public-files.mjs`.
 
+## Website visit analytics
+
+Cloudflare Web Analytics is configured for `mykolakhytra.com` in the owner's
+Cloudflare dashboard. It reports page views, visits, referring sites, countries,
+devices, browsers and page-performance metrics. It is separate from the owner's
+GitHub, ChatGPT/Codex and Claude Code activity displayed on the site.
+
+Cloudflare injects the beacon at the edge; do not add a second script or a site
+token to this repository. The dashboard controls whether EU visitors are
+included. Do not change that privacy setting without owner approval. Reports
+are private to the Cloudflare account; no public dashboard is added to the site.
+
+Only builds for the exact production URL `https://mykolakhytra.com/` allow the
+Cloudflare beacon file and its versioned path in `script-src`. `connect-src`
+allows only `https://mykolakhytra.com/cdn-cgi/rum`, not arbitrary same-origin
+requests or external analytics endpoints. Local, preview and alternate-host
+builds retain `connect-src 'none'` and block third-party scripts. All other CSP
+restrictions remain unchanged.
+
+Cloudflare does not support custom click events or UTM reporting here. Visits
+are not a count of identifiable, unique people; ad blockers and the selected
+geographic exclusion can reduce reported traffic. The service does not backfill
+visits from before it was active. Verify the injected script, successful RUM
+requests and dashboard data after merging and deploying these CSP changes.
+
+References: [setup](https://developers.cloudflare.com/web-analytics/get-started/),
+[metrics](https://developers.cloudflare.com/web-analytics/data-metrics/dimensions/),
+[CSP and limitations](https://developers.cloudflare.com/web-analytics/faq/).
+
 ## GitHub activity
 
 The GitHub section is static HTML in all four languages and both themes. Visitors
 do not call GitHub APIs; no token, raw snapshot or private repository metadata is
-deployed. The existing `connect-src 'none'` policy is unchanged.
+deployed. The production analytics exception does not allow GitHub API requests.
 
 - Calendar: dates, counts and intensity levels visible on the GitHub profile
   **without signing in**, including anonymous private contributions already shared
@@ -241,7 +272,8 @@ Europe/Warsaw, with notifications for failed runs only. Scheduled runs use a
 temporary main-branch checkout, never the owner's working files or a direct push.
 Cloudflare production builds use a newer valid public asset when available,
 otherwise the committed dated baseline. Dev, CI and preview builds stay offline.
-Visitors never contact OpenAI, and `connect-src 'none'` is unchanged.
+Visitors never contact OpenAI; the production analytics exception permits only
+the Cloudflare RUM endpoint, not AI-provider APIs.
 
 Official source: [Codex App Server](https://learn.chatgpt.com/docs/app-server).
 

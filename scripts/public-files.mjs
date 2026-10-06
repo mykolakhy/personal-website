@@ -13,10 +13,14 @@ export const publicFiles = [
   'assets/downloads/mykola-khytra-cv.pdf',
 ];
 
-export function securityHeaders(scriptHashes = []) {
+export function securityHeaders(scriptHashes = [], { webAnalytics = false } = {}) {
   const hashes = Array.isArray(scriptHashes) ? scriptHashes : [scriptHashes];
+  // Cloudflare injects its own beacon at the edge. Allow only the beacon file
+  // (including Cloudflare's versioned path), and only our production RUM endpoint.
+  const beacon = webAnalytics ? ' https://static.cloudflareinsights.com/beacon.min.js https://static.cloudflareinsights.com/beacon.min.js/' : '';
+  const connections = webAnalytics ? 'https://mykolakhytra.com/cdn-cgi/rum' : "'none'";
   return {
-    'Content-Security-Policy': `default-src 'none'; script-src 'self'${hashes.map((hash) => ` '${hash}'`).join('')}; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'none'`,
+    'Content-Security-Policy': `default-src 'none'; script-src 'self'${hashes.map((hash) => ` '${hash}'`).join('')}${beacon}; style-src 'self'; img-src 'self'; font-src 'self'; connect-src ${connections}; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'none'`,
     'X-Content-Type-Options': 'nosniff',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
     'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
