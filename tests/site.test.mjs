@@ -179,6 +179,7 @@ test('preview serves safe resources but no private files, listings or writes', a
   assert.equal(response.status, 200);
   assert.match(response.headers.get('content-security-policy'), /frame-ancestors 'none'/);
   assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+  assert.equal(response.headers.get('strict-transport-security'), null, 'loopback preview must not set HSTS');
   for (const path of ['/.git/config', '/.env', '/qa-artifacts/', '/assets/avatar.png', '/node_modules/', '/scripts/serve.mjs', '/%2e%2e%2fREADME.md', '/assets/', '/assets/%zz']) {
     assert.ok([400, 404].includes((await fetch(url + path)).status), path);
   }

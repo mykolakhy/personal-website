@@ -67,5 +67,12 @@ export function aggregateClaudeCache(raw, now = new Date()) {
 }
 
 export function latestClaudeSnapshot(fallback, fetcher = fetch) {
-  return latestAISnapshot(fallback, fetcher, { url: claudeSnapshotURL, validate: validateClaudeSnapshot, newer: (current, previous) => current.computedThrough >= previous.computedThrough && Date.parse(current.updatedAt) > Date.parse(previous.updatedAt) });
+  return latestAISnapshot(fallback, fetcher, { url: claudeSnapshotURL, validate: validateClaudeSnapshot, progress: assertClaudeProgress });
+}
+
+export function assertClaudeProgress(current, previous, { allowMetricCorrection = false } = {}) {
+  validateClaudeSnapshot(current); validateClaudeSnapshot(previous);
+  if (Date.parse(current.updatedAt) < Date.parse(previous.updatedAt) || current.computedThrough < previous.computedThrough) throw new Error('Cannot replace newer Claude statistics or cache coverage.');
+  if (!allowMetricCorrection && (current.coverageStart > previous.coverageStart || claudeSummaryKeys.some(key => current.summary[key] < previous.summary[key]))) throw new Error('Claude cumulative statistics regressed.');
+  return current;
 }

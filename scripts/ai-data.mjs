@@ -54,23 +54,39 @@ export function aggregateAIUsage(result, now = new Date()) {
   return validateAISnapshot({ version: 1, source: 'codex-account-usage', updatedAt, summary, months });
 }
 
-export async function latestAISnapshot(fallback, fetcher = fetch, { url = aiSnapshotURL, validate = validateAISnapshot, newer = (current, previous) => Date.parse(current.updatedAt) > Date.parse(previous.updatedAt) } = {}) {
+export function assertAIProgress(current, previous, { allowMetricCorrection = false } = {}) {
+  validateAISnapshot(current); validateAISnapshot(previous);
+  if (Date.parse(current.updatedAt) < Date.parse(previous.updatedAt)) throw new Error('Cannot replace newer AI statistics.');
+  // A current streak and rolling monthly values may legitimately decrease.
+  for (const key of summaryKeys.filter(key => key !== 'currentStreakDays')) {
+    if (!allowMetricCorrection && previous.summary[key] !== null && (current.summary[key] === null || current.summary[key] < previous.summary[key])) throw new Error('AI cumulative statistics regressed.');
+  }
+  return current;
+}
+
+export async function readPublicSnapshot(url, validate, fetcher = fetch) {
+  const response = await fetcher(url, { credentials: 'omit', cache: 'no-store', signal: AbortSignal.timeout(15000) });
+  if (!response.ok || !response.body) throw new Error('Public statistics unavailable.');
+  const reader = response.body.getReader();
+  const chunks = []; let bytes = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    bytes += value.byteLength;
+    if (bytes > 20000) { await reader.cancel(); throw new Error('Public statistics too large.'); }
+    chunks.push(value);
+  }
+  const snapshot = validate(JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks))));
+  if (Date.parse(snapshot.updatedAt) > Date.now() + 300000) throw new Error('Future snapshot.');
+  return snapshot;
+}
+
+export async function latestAISnapshot(fallback, fetcher = fetch, { url = aiSnapshotURL, validate = validateAISnapshot, progress = assertAIProgress } = {}) {
   validate(fallback);
   try {
     // Production can read only this sanitized PUBLIC asset, never account auth.
-    const response = await fetcher(url, { credentials: 'omit', signal: AbortSignal.timeout(15000) });
-    if (!response.ok || !response.body) throw new Error('Unavailable');
-    const reader = response.body.getReader();
-    const chunks = []; let bytes = 0;
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      bytes += value.byteLength;
-      if (bytes > 20000) { await reader.cancel(); throw new Error('Too large'); }
-      chunks.push(value);
-    }
-    const current = validate(JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks))));
-    if (Date.parse(current.updatedAt) > Date.now() + 300000) throw new Error('Future snapshot');
-    return newer(current, fallback) ? current : fallback;
+    const current = await readPublicSnapshot(url, validate, fetcher);
+    progress(current, fallback);
+    return Date.parse(current.updatedAt) > Date.parse(fallback.updatedAt) ? current : fallback;
   } catch { console.warn('AI update unavailable; using the dated, validated snapshot.'); return fallback; }
 }

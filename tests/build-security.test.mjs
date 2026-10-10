@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { copyFile, mkdir, mkdtemp, readFile, readdir, rm, stat, symlink, writeFile } from 'node:fs/promises';
+import { copyFile, link, mkdir, mkdtemp, readFile, readdir, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -129,3 +129,35 @@ test('Claude snapshots with private fields are rejected before changing output',
   assert.equal(await readFile(resolve(destination, 'index.html'), 'utf8'), 'Previously built public content.');
   assert.deepEqual(await readdir(destination), ['index.html']);
 });
+
+for (const kind of ['root link', 'parent link', 'dangling root link', 'internal directory link', 'output file link', 'output hard link', 'directory instead of file']) {
+  test(`build rejects ${kind} without changing outside files or existing output`, async context => {
+    const { build, destination } = await fixture(context);
+    const outside = resolve(dirname(destination), 'outside');
+    await mkdir(outside);
+    await writeFile(resolve(outside, 'index.html'), privateMarker);
+    if (kind === 'root link') await symlink(outside, destination, 'dir');
+    else if (kind === 'dangling root link') await symlink(resolve(outside, 'missing'), destination, 'dir');
+    else if (kind === 'parent link') {
+      const parent = dirname(destination);
+      const alias = resolve(parent, 'alias'); await symlink(outside, alias, 'dir');
+      const { build: buildModule } = await import('../scripts/build.mjs');
+      await assert.rejects(buildModule({ destination: resolve(alias, 'nested/dist'), siteURL: null }), /Unsafe build destination/);
+      assert.deepEqual(await readdir(outside), ['index.html']);
+      assert.equal(await readFile(resolve(outside, 'index.html'), 'utf8'), privateMarker);
+      return;
+    } else {
+      await mkdir(destination);
+      if (kind === 'internal directory link') {
+        await writeFile(resolve(destination, 'index.html'), 'Previous build');
+        await symlink(outside, resolve(destination, 'assets'), 'dir');
+      } else if (kind === 'output file link') await symlink(resolve(outside, 'index.html'), resolve(destination, 'index.html'));
+      else if (kind === 'output hard link') await link(resolve(outside, 'index.html'), resolve(destination, 'index.html'));
+      else await mkdir(resolve(destination, 'index.html'));
+    }
+    await assert.rejects(build(), /Unsafe build destination|Unexpected build output/);
+    assert.deepEqual(await readdir(outside), ['index.html']);
+    assert.equal(await readFile(resolve(outside, 'index.html'), 'utf8'), privateMarker);
+    if (kind === 'internal directory link') assert.equal(await readFile(resolve(destination, 'index.html'), 'utf8'), 'Previous build');
+  });
+}
