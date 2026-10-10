@@ -27,6 +27,11 @@ test('only the exact production URL enables analytics CSP, without embedding tel
     for (const siteURL of ['https://mykolakhytra.com/', null, 'https://preview.mykolakhytra.pages.dev/', 'https://mykolakhytra.com/subpath/', 'https://portfolio.example/']) {
       await build({ destination, siteURL });
       const headers = await readFile(resolve(destination, '_headers'), 'utf8');
+      if (siteURL === 'https://mykolakhytra.com/') {
+        assert.match(headers, /\nhttps:\/\/mykolakhytra\.com\/\*\n  Strict-Transport-Security: max-age=300\n/);
+        assert.doesNotMatch(headers.split('\nhttps://')[0], /Strict-Transport-Security/);
+        assert.doesNotMatch(headers, /includeSubDomains|preload/);
+      } else assert.doesNotMatch(headers, /Strict-Transport-Security/);
       if (siteURL === 'https://mykolakhytra.com/') assert.match(headers, /connect-src https:\/\/mykolakhytra\.com\/cdn-cgi\/rum/);
       else {
         assert.match(headers, /connect-src 'none'/);

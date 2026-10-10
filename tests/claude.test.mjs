@@ -99,7 +99,9 @@ test('all languages render provider separation, exact counts, coverage and inacc
 
 test('combined publication uploads only the two aggregates and triggers one main rebuild', async () => {
   const calls = [];
-  await publishAIStats({ confirmed: true, includeClaude: true, run: (command,args) => { assert.equal(command,'gh'); calls.push(args); return ''; } });
+  const ai = JSON.parse(await readFile('data/ai-stats.json', 'utf8'));
+  const clock = new Date(saved.updatedAt); ai.updatedAt = clock.toISOString();
+  await publishAIStats({ confirmed: true, includeClaude: true, now: clock, readSources: async () => new Map([['data/ai-stats.json', Buffer.from(JSON.stringify(ai))], ['data/claude-stats.json', Buffer.from(JSON.stringify(saved))]]), fetcher: async url => new Response(JSON.stringify(url === claudeSnapshotURL ? saved : ai)), run: (command,args) => { assert.equal(command,'gh'); calls.push(args); return args[0] === 'api' ? JSON.stringify({ draft: false, assets: [{ name: 'ai-stats.json' }, { name: 'claude-stats.json' }] }) : ''; } });
   const upload = calls.find(args => args[1] === 'upload');
   assert.equal(upload.filter(arg => arg.endsWith('/ai-stats.json')).length, 1);
   assert.equal(upload.filter(arg => arg.endsWith('/claude-stats.json')).length, 1);

@@ -136,13 +136,13 @@ test('all four languages render exact accessible figures, twelve cards and safe 
 test('publishing requires explicit confirmation and uses only the fixed repository and main rebuild', async () => {
   await assert.rejects(publishAIStats(), /confirmation/);
   const calls = [];
-  await publishAIStats({ confirmed: true, run: (command, args) => { assert.equal(command, 'gh'); calls.push(args); return ''; } });
-  assert.deepEqual(calls.map(args => args.slice(0, 2)), [['release', 'view'], ['release', 'upload'], ['workflow', 'run']]);
+  await publishAIStats({ confirmed: true, now: new Date(saved.updatedAt), fetcher: async () => new Response(JSON.stringify(saved)), run: (command, args) => { assert.equal(command, 'gh'); calls.push(args); return args[0] === 'api' ? JSON.stringify({ draft: false, assets: [{ name: 'ai-stats.json' }] }) : ''; } });
+  assert.deepEqual(calls.map(args => args.slice(0, 2)), [['api', 'repos/mykolakhy/personal-website/releases/tags/ai-activity'], ['release', 'upload'], ['workflow', 'run']]);
   assert.ok(calls[1].includes('mykolakhy/personal-website'));
   assert.ok(calls[1].includes('--clobber'));
   assert.ok(calls.at(-1).includes('main'));
   assert.doesNotMatch(JSON.stringify(calls), /auth\.json|accessToken|threadUsage|git push/);
-  await assert.rejects(publishAIStats({ confirmed: true, run: () => { throw new Error('private-token'); } }), error => !error.message.includes('private-token'));
+  await assert.rejects(publishAIStats({ confirmed: true, now: new Date(saved.updatedAt), run: () => { throw new Error('private-token'); } }), error => !error.message.includes('private-token'));
 });
 
 test('monthly OpenAI cards identify token units and explain the current comparison maximum in every language', async () => {

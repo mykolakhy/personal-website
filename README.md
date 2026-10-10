@@ -40,7 +40,20 @@ SITE_URL=https://mykolakhytra.com/ npm run build
 Only `dist/` is deployment output. Production builds configure canonical/social
 URLs, structured data and sitemap entries. All builds generate `robots.txt`,
 `sitemap.xml`, `404.html` and security headers in `_headers`. The build rejects
-symlinked sources and unexpected output files.
+symlinked sources, output directories/ancestors and unexpected output files.
+Existing output hard links and directories occupying a planned file are also
+rejected before content writes. Files are replaced through exclusive temporary
+files rather than truncating an existing target. This prevents accidental path
+redirection; it is not isolation from another process with write access to the
+same parent directories.
+
+The exact production URL adds a host-scoped HSTS policy for
+`https://mykolakhytra.com/*`, initially `max-age=300` (five minutes). It does not
+enable `includeSubDomains` or preload, or apply to localhost/Pages previews.
+After merging, verify the header on localized pages, static assets and 404s,
+and verify HTTP still redirects to HTTPS. Increase the duration only after this
+initial rollout has been verified; never disable HTTPS while HSTS is cached.
+See [Cloudflare Pages header matching](https://developers.cloudflare.com/pages/configuration/headers/).
 
 ## Where to make changes
 
@@ -262,15 +275,22 @@ After this feature is merged, an owner can explicitly publish an updated snapsho
 npm run publish:ai -- --confirm-publication
 ```
 
+The command requires a numeric lifetime-token count and collection timestamps
+within the last 15 minutes. Before any upload it verifies release metadata and
+reads the bounded, validated existing public assets. An unavailable comparison,
+older snapshot or decreasing cumulative counter aborts the entire publication;
+a missing Claude asset may be added for the first time. A new release is created
+only after a confirmed GitHub 404, never after an authentication/network failure.
+
 This uploads only validated aggregates to the public `ai-activity` release and
 requests the existing main-branch GitHub refresh/Cloudflare deployment workflow.
 It does not commit to `main`, bypass protections, or create a new account login.
 The command itself does not install a scheduler. An owner-approved Codex desktop
 automation can run the collection and publication locally; it requires the Mac
-and app to be available. The configured owner schedule is daily at 23:30
+and app to be available. The configured owner schedule is every other day at 23:30
 Europe/Warsaw, with notifications for failed runs only. Scheduled runs use a
 temporary main-branch checkout, never the owner's working files or a direct push.
-Cloudflare production builds use a newer valid public asset when available,
+Cloudflare production builds use a newer valid, non-regressing public asset when available,
 otherwise the committed dated baseline. Dev, CI and preview builds stay offline.
 Visitors never contact OpenAI; the production analytics exception permits only
 the Cloudflare RUM endpoint, not AI-provider APIs.
@@ -309,11 +329,26 @@ npm run publish:ai -- --confirm-publication --include-claude
 The publisher validates both snapshots before upload. Only `ai-stats.json` and
 `claude-stats.json` aggregates reach the public `ai-activity` release; a single
 main-branch workflow triggers Cloudflare. Production accepts newer valid snapshots
-without credentials, refuses Claude coverage regression, and falls back to the
+without credentials, refuses regression of Claude cache dates, coverage and
+cumulative counters, and falls back to the
 committed baseline on errors. Dev/CI/preview remain offline. Neither source JSON
 nor collection scripts are deployed; visitors make no provider API requests.
-The daily automation enables Claude after these scripts are merged into main,
+The local automation enables Claude after these scripts are merged into main,
 preserving its existing schedule and failure-only notifications.
+
+OpenAI's current streak and rolling monthly values may legitimately decrease;
+they are not treated as cumulative counters. Claude's `updatedAt` is the collection
+time, not its cache date: unchanged `computedThrough` is allowed. Provider and
+cache-token categories remain separate.
+
+If a provider legitimately corrects cumulative values downward, stop the normal
+automation and obtain an explicit owner decision. Refresh and validate the
+corrected committed baseline in a reviewed PR, then publish fresh aggregates with
+`--confirm-publication --confirm-metric-correction` (and `--include-claude` when
+applicable). This extra confirmation allows metric corrections only; older
+collection/cache dates, invalid schemas and stale collections remain blocked.
+Do not put this override in the recurring automation. Publication checks are
+not an atomic GitHub transaction; avoid simultaneous manual and scheduled runs.
 
 References: [Claude Code usage](https://code.claude.com/docs/en/costs),
 [cache token categories](https://platform.claude.com/docs/en/build-with-claude/prompt-caching),
