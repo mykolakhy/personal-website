@@ -75,7 +75,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-v
 .language-switcher:not([open]) summary { color: var(--text-heading); border-color: var(--border-strong); }
 .language-switcher[open] summary { border-color: var(--accent); color: var(--accent); }
 .language-switcher[open] summary > [aria-hidden] { transform: rotate(180deg); }
-.language-list { position: absolute; right: 0; top: 100%; width: 180px; padding: 8px; margin: 8px 0 0; list-style: none; background: var(--bg-raised); border: 1px solid var(--border-strong); border-radius: 8px; box-shadow: 0 12px 32px var(--menu-shadow); }
+.language-list { position: absolute; right: 0; top: 100%; width: 180px; max-height: calc(100dvh - 72px); overflow-y: auto; overscroll-behavior-y: contain; padding: 8px; margin: 8px 0 0; list-style: none; background: var(--bg-raised); border: 1px solid var(--border-strong); border-radius: 8px; box-shadow: 0 12px 32px var(--menu-shadow); }
 .language-list a { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; border-radius: 4px; text-decoration: none; font: 500 15px/1.4 var(--font-sans); }
 .language-list a:hover, .language-list a[aria-current="page"] { background: var(--bg-surface); color: var(--accent); }
 .status-dot { flex-shrink: 0; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--status); box-shadow: 0 0 0 4px var(--status-halo); }
