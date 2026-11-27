@@ -16,9 +16,11 @@ import { publicSourceBytes } from '../scripts/build.mjs';
 const html = renderPage(await readFile('index.html', 'utf8'), 'en');
 const css = await readFile('styles.css', 'utf8');
 
-test('positioning covers manual, general and automation QA before the case studies', () => {
-  assert.match(html, /class="hero-lede">Manual, API, and automated testing\./);
+test('Quality Intelligence Engineering positioning builds on hands-on QA experience', () => {
+  assert.match(html, /class="hero-tagline">Quality Intelligence Engineer</);
+  assert.match(html, /class="hero-lede">I design AI-powered workflows for software quality/);
   assert.match(html, /Five years across manual, general, and automation QA/);
+  assert.match(html, /<h3>Senior Automation QA Engineer<\/h3>/);
   assert.match(html, /<strong>QA<\/strong><span>manual \+ automation<\/span>/);
   const expertise = html.match(/<section id="expertise"([\s\S]*?)<\/section>/)?.[1];
   assert.ok(expertise, 'expertise section exists');
@@ -39,11 +41,12 @@ test('AI positioning describes practical agent workflows without unverified expe
   assert.match(html, /href="\.\/ai\/#ai-workflow"><span>See the workflow/);
   assert.match(css, /html \{ scroll-behavior: auto;/, 'anchor navigation must not race with disclosure scrolling');
   const description = html.match(/<meta name="description" content="([^"]+)"/)[1];
-  assert.match(description, /Manual, API, and automated testing/);
-  assert.match(description, /Claude Code and Codex/);
+  assert.match(description, /Quality Intelligence Engineer in Kraków/);
+  assert.match(description, /AI-powered workflows for software quality/);
   assert.doesNotMatch(workflow, /Copilot|Aider|LLM|RAG|\d+\s*%|\d+\s*[×x]/);
   const social = await readFile('assets/social-preview.svg', 'utf8');
-  assert.match(social, /Manual \+ automation\. AI-assisted QA\./);
+  assert.match(social, /Quality Intelligence Engineer/);
+  assert.match(social, /AI-powered workflows for software quality/);
   assert.match(social, /Claude Code \/ Codex/);
   const image = await sharp('assets/social-preview.png').metadata();
   assert.equal(image.width, 1200);
@@ -135,6 +138,7 @@ test('build publishes only the allowlist and configures real production metadata
   assert.match(result, /content="https:\/\/portfolio\.example\/qa\/assets\/social-preview.png"/);
   const structured = JSON.parse(result.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)[1]);
   assert.equal(structured.mainEntity.name, 'Mykola Khytra');
+  assert.equal(structured.mainEntity.jobTitle, 'Quality Intelligence Engineer');
   assert.equal(structured['@type'], 'ProfilePage');
   const files = await readdir(destination, { recursive: true, withFileTypes: true });
   const actual = files.filter((item) => item.isFile()).map((item) => resolve(item.parentPath, item.name).slice(destination.length + 1)).sort();
