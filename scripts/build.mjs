@@ -102,7 +102,7 @@ export async function build({ destination = resolve(root, 'dist'), siteURL = pro
         const image = new URL('assets/social-preview.png', base).href;
         const structured = JSON.stringify({
           '@context': 'https://schema.org', '@type': page.key === 'home' ? 'ProfilePage' : 'WebPage', url: canonical, inLanguage: code,
-          mainEntity: { '@type': 'Person', name: 'Mykola Khytra', jobTitle: 'Senior QA Engineer',
+          mainEntity: { '@type': 'Person', name: 'Mykola Khytra', jobTitle: 'Quality Intelligence Engineer',
             url: canonical, image: new URL('assets/portrait-640.jpg', base).href,
             sameAs: ['https://www.linkedin.com/in/mykola-khytra/', 'https://github.com/mykolakhy'] },
         }).replaceAll('<', '\\u003c');
