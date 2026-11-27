@@ -134,6 +134,45 @@ test('switcher preserves the section, remembers the language and honors explicit
   await expect(page.locator('.language-switcher')).not.toHaveAttribute('open', '');
 });
 
+test('Back and Forward restore the visited locale without changing the saved language', async ({ page }) => {
+  await page.goto('/?ref=history#work');
+  const englishPage = page.url();
+  await page.locator('.language-switcher summary').click();
+  await page.getByRole('link', { name: 'Deutsch', exact: true }).click();
+  await expect(page).toHaveURL(/\/de\/#work$/);
+  const germanPage = page.url();
+
+  await page.goBack({ waitUntil: 'commit' });
+  await page.waitForLoadState('domcontentloaded');
+  await expect(page).toHaveURL(englishPage);
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  expect(await page.evaluate(() => localStorage.getItem('portfolio-language'))).toBe('de');
+
+  await page.goForward({ waitUntil: 'commit' });
+  await expect(page).toHaveURL(germanPage);
+  await page.goto('/projects/#github');
+  await expect(page).toHaveURL(/\/de\/projects\/#github$/);
+});
+
+test('the language menu scrolls within a short viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 200 });
+  await page.goto('/');
+  await page.locator('.language-switcher summary').click();
+  const menu = page.locator('.language-list');
+  const bounds = await menu.boundingBox();
+  expect(bounds.y + bounds.height).toBeLessThanOrEqual(200);
+  await menu.hover();
+  await page.mouse.wheel(0, 240);
+  await expect.poll(() => menu.evaluate(element => element.scrollTop)).toBeGreaterThan(0);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+
+  const german = page.getByRole('link', { name: 'Deutsch', exact: true });
+  const option = await german.boundingBox();
+  expect(option.y + option.height).toBeLessThanOrEqual(bounds.y + bounds.height);
+  await german.click();
+  await expect(page).toHaveURL(/\/de\/$/);
+});
+
 test('all languages and language links work without JavaScript', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();

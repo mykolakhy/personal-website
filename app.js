@@ -21,15 +21,17 @@ if (switcher) {
   let preferred;
   try { preferred = localStorage.getItem(preferenceKey); } catch { /* Private browsing may block storage. */ }
   const explicit = new URLSearchParams(location.search).get('lang');
+  const historyTraversal = performance.getEntriesByType('navigation')[0]?.type === 'back_forward';
   const returnLink = links.find((link) => link.dataset.language === preferred);
-  if (language === 'en' && !explicit && preferred !== 'en' && returnLink) {
+  if (!historyTraversal && language === 'en' && !explicit && preferred !== 'en' && returnLink) {
     const destination = new URL(returnLink.href);
     destination.search = location.search;
     destination.hash = location.hash;
     location.replace(destination.href);
   } else {
-    // A direct localized URL or an explicit English choice wins over memory.
-    remember(language);
+    // A direct visit updates the preferred language. Back/Forward restores
+    // the visited page and keeps the most recent language preference.
+    if (!historyTraversal) remember(language);
     // Old one-page links keep reaching the relocated content. Without JS the
     // home-page teaser anchors still offer links to the complete pages.
     if (document.documentElement.dataset.page === 'home') {

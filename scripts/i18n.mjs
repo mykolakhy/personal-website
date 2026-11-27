@@ -149,7 +149,7 @@ export function renderNotFound(code, catalog, homeRoot = '/') {
   <title>${text('404.title')}</title>
   <link rel="icon" type="image/svg+xml" href="${root}assets/favicon.svg" />
   <script src="${root}theme.js?v=20261002-1"></script>
-  <link rel="stylesheet" href="${root}styles.css?v=20261006-1" />
+  <link rel="stylesheet" href="${root}styles.css?v=20261127-1" />
 </head>
 <body>
   <header class="site-header"><div class="container header-inner"><a class="wordmark" href="${home}">mykola<span>/</span>qa</a><div class="header-controls">${themeToggle(catalog)}</div></div></header>
