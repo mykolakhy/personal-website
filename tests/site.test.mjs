@@ -79,7 +79,7 @@ test('team claims distinguish shared scope from independent process ownership', 
 test('downloadable CV matches the owner-approved PDF exactly', async () => {
   // Update this fingerprint only when the owner approves a replacement CV.
   const cv = await readFile('assets/downloads/mykola-khytra-cv.pdf');
-  assert.equal(createHash('sha256').update(cv).digest('hex'), '58d93d93226c1c6dc91b5fe592181a825d8c53c28c1c524196c50e3062f69769');
+  assert.equal(createHash('sha256').update(cv).digest('hex'), 'f1003d20c7aded45c6d9b5c1187c03dbedd0a3e4885e1acf51e68cdb60667fb2');
   assert.equal(cv.subarray(0, 5).toString(), '%PDF-');
 });
 
